@@ -21,7 +21,7 @@ public class RoadGenerator : MonoBehaviour
     [SerializeField] uint road_system_scale = 1;
     [SerializeField] int road_tile_size = 2;
     // % chance to generate junction in [0, 100]
-    [SerializeField] int chance_to_pick_dir = 80;
+    [SerializeField] int chance_to_pick_dir;
 
     enum RoadType
     {
