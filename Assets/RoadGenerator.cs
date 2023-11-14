@@ -22,6 +22,7 @@ public class RoadGenerator : MonoBehaviour
     [SerializeField] int road_tile_size = 2;
     // % chance to generate junction in [0, 100]
     [SerializeField] int chance_to_pick_dir;
+    [SerializeField] int number_of_iterations;
 
     enum RoadType
     {
@@ -43,7 +44,7 @@ public class RoadGenerator : MonoBehaviour
         num_cells_in_row = plane_width / road_tile_size;
         road_type_grid = new RoadType[num_cells_in_row, num_cells_in_row];
         InitializeRoadTypeGrid();
-        GenerateRoad(new Vector2Int(num_cells_in_row / 2, num_cells_in_row / 2), 5); // start from center and use 5 iterations
+        GenerateRoad(new Vector2Int(num_cells_in_row / 2, num_cells_in_row / 2), number_of_iterations); // start from center and use 5 iterations
         DrawRoadBasedOnRoadTypeGrid(); // using data in road_type_grid, instantiate correct prefabs to visualize the road.
     }
 
