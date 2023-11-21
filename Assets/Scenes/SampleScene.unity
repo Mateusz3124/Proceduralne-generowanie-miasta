@@ -355,10 +355,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   roadPrefab: {fileID: 394496527}
-  roadWidth: 50
-  roadLength: 100
-  segmentSize: 1
-  repeatNumber: 2
+  obstaclePrefab: {fileID: 6360650138758936101, guid: 42075ec737f246640b9fd5106e73519c, type: 3}
+  startPointX: -100
+  startPointY: -100
+  roadWidth: 200
+  roadLength: 200
+  repeatNumber: 4
+  nmbOfObstacles: 5
 --- !u!64 &724097422
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -441,8 +444,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 10, y: 10, z: 10}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 20, y: 20, z: 20}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
