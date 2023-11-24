@@ -211,6 +211,7 @@ public class RoadGenerator : MonoBehaviour
 
         if(difference == 0.0f) 
         {
+             // to be implemented get height of previous tile and give it rather than 0.1f
             road.GetComponent<Transform>().position = new Vector3(pos_x + road_tile_size / 2, 0.1f, pos_z + road_tile_size / 2);
             road.GetComponent<Transform>().rotation = rotation * (road.GetComponent<Transform>().rotation);
         }
@@ -218,6 +219,7 @@ public class RoadGenerator : MonoBehaviour
         {
             float angleInRadians = Mathf.Atan2((-difference)/2, road_tile_size / 2);
             float angleInDegrees = Mathf.Rad2Deg * angleInRadians;
+            // to be implemented get height of previous tile and give it rather than 0.1f
             road.GetComponent<Transform>().position = new Vector3(pos_x + road_tile_size / 2, 0.1f + (-difference) / 2, pos_z + road_tile_size / 2);
             road.GetComponent<Transform>().rotation = rotation * (road.GetComponent<Transform>().rotation * Quaternion.Euler((-angleInDegrees), 0.0f, 0.0f));
             float scaleY = GetProperScale(difference);
@@ -227,13 +229,14 @@ public class RoadGenerator : MonoBehaviour
         {
             float angleInRadians = Mathf.Atan2(difference / 2, road_tile_size / 2);
             float angleInDegrees = Mathf.Rad2Deg * angleInRadians;
+            // to be implemented get height of previous tile and give it rather than 0.1f
             road.GetComponent<Transform>().position = new Vector3(pos_x + road_tile_size / 2, 0.1f + difference / 2, pos_z + road_tile_size / 2);
             road.GetComponent<Transform>().rotation = rotation * (road.GetComponent<Transform>().rotation * Quaternion.Euler(angleInDegrees, 0.0f, 0.0f));
             float scaleY = GetProperScale(difference);
             road.GetComponent<Transform>().localScale += new Vector3(0, scaleY, 0);
         }
     }
-
+    // need to scale since diagonal is longer
     float GetProperScale(float difference)
     {
         float supposed_length = Mathf.Sqrt(difference * difference + road_tile_size * road_tile_size);
