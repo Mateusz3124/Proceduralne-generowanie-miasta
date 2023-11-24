@@ -151,9 +151,7 @@ public class RoadGenerator : MonoBehaviour
                     case RoadType.Road:
                         Quaternion rotation;
                         var road = Instantiate(GetRoadVariantBasedOnNeighboringTiles(new Vector2Int(i, j), out rotation));
-                        float pos_x = plane_min_corner.x + road_tile_size * i, pos_z = plane_min_corner.y + road_tile_size * j;
-                        road.GetComponent<Transform>().position = new Vector3(pos_x + road_tile_size / 2, 0.1f, pos_z + road_tile_size / 2);
-                        road.GetComponent<Transform>().rotation = rotation * road.GetComponent<Transform>().rotation;
+                        DrawRoadBasedOnAngle(road, rotation, i, j);
                         break;
                     default:
                         break;
@@ -161,6 +159,88 @@ public class RoadGenerator : MonoBehaviour
             }
         }
     }
+    /*
+     This method will create a road with propare angle based on difference between the heights  
+     */
+    void DrawRoadBasedOnAngle (GameObject road, Quaternion rotation, int i, int j)
+    {
+
+        float pos_x = plane_min_corner.x + road_tile_size * i, pos_z = plane_min_corner.y + road_tile_size * j;
+
+        float [] start_pos = new float[2];
+        float [] end_pos = new float[2];
+
+        //checking if the road is turned and based on it change positions
+        switch (rotation.x)
+        {
+            case 0.0f:
+                start_pos[0] = pos_x + road_tile_size / 2;
+                start_pos[1] = pos_z;
+                end_pos[0] = pos_x + road_tile_size / 2;
+                end_pos[1] = pos_z + road_tile_size;
+                break;
+            case 90.0f:
+                start_pos[0] = pos_x;
+                start_pos[1] = pos_z + road_tile_size / 2;
+                end_pos[0] = pos_x + road_tile_size;
+                end_pos[1] = pos_z + road_tile_size / 2;
+                break;
+            case 180.0f:
+                start_pos[0] = pos_x + road_tile_size / 2;
+                start_pos[1] = pos_z + road_tile_size;
+                end_pos[0] = pos_x + road_tile_size / 2;
+                end_pos[1] = pos_z;
+                break;
+            case 270.0f:
+                start_pos[0] = pos_x + road_tile_size;
+                start_pos[1] = pos_z + road_tile_size / 2;
+                end_pos[0] = pos_x;
+                end_pos[1] = pos_z + road_tile_size / 2;
+                break;
+            default:
+                throw new Exception("Incorrect angle of turn");
+        }
+
+        // for the time being since there is no map i will manually do the heights but normally it will be based on start_pos and end_pos
+        //height where road starts
+        float start_height = 0.1f;
+        //height where end of the road
+        float end_height = 1.1f;
+
+        float difference = start_height - end_height;
+
+        if(difference == 0.0f) 
+        {
+            road.GetComponent<Transform>().position = new Vector3(pos_x + road_tile_size / 2, 0.1f, pos_z + road_tile_size / 2);
+            road.GetComponent<Transform>().rotation = rotation * (road.GetComponent<Transform>().rotation);
+        }
+        else if(difference < 0.0f) 
+        {
+            float angleInRadians = Mathf.Atan2((-difference)/2, road_tile_size / 2);
+            float angleInDegrees = Mathf.Rad2Deg * angleInRadians;
+            road.GetComponent<Transform>().position = new Vector3(pos_x + road_tile_size / 2, 0.1f + (-difference) / 2, pos_z + road_tile_size / 2);
+            road.GetComponent<Transform>().rotation = rotation * (road.GetComponent<Transform>().rotation * Quaternion.Euler((-angleInDegrees), 0.0f, 0.0f));
+            float scaleY = GetProperScale(difference);
+            road.GetComponent<Transform>().localScale += new Vector3(0,scaleY,0);
+        }
+        else
+        {
+            float angleInRadians = Mathf.Atan2(difference / 2, road_tile_size / 2);
+            float angleInDegrees = Mathf.Rad2Deg * angleInRadians;
+            road.GetComponent<Transform>().position = new Vector3(pos_x + road_tile_size / 2, 0.1f + difference / 2, pos_z + road_tile_size / 2);
+            road.GetComponent<Transform>().rotation = rotation * (road.GetComponent<Transform>().rotation * Quaternion.Euler(angleInDegrees, 0.0f, 0.0f));
+            float scaleY = GetProperScale(difference);
+            road.GetComponent<Transform>().localScale += new Vector3(0, scaleY, 0);
+        }
+    }
+
+    float GetProperScale(float difference)
+    {
+        float supposed_length = Mathf.Sqrt(difference * difference + road_tile_size * road_tile_size);
+        float result = supposed_length / road_tile_size * 100 - 100;
+        return result;
+    }
+
 
     /*
         Picks matching road tile according to it's neighbors
@@ -206,7 +286,7 @@ public class RoadGenerator : MonoBehaviour
                 return road_turn;
             case 3:
                 if (right && left && down) { orientation = Quaternion.AngleAxis(90.0f, Vector3.up); }
-                else if (right && left && up) { orientation = Quaternion.AngleAxis(-90.0f, Vector3.up); }
+                else if (right && left && up) { orientation = Quaternion.AngleAxis(270.0f, Vector3.up); }
                 else if (up && down && right) { orientation = Quaternion.identity; }
                 else if (up && down && left) { orientation = Quaternion.AngleAxis(180.0f, Vector3.up); }
                 return road_3way;
