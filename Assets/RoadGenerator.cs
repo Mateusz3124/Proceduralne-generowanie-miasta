@@ -13,12 +13,10 @@ public class RoadGenerator : MonoBehaviour
     [SerializeField] GameObject road_turn;
     [SerializeField] GameObject road_3way;
     [SerializeField] GameObject road_4way;
-    [SerializeField] GameObject road_system_plane;
+    [SerializeField] ProceduralTerrain theTerrain;
     // AABB of the plane
     Vector2 plane_min_corner, plane_max_corner;
     int num_cells_in_row;
-    // The bigger the scale, the bigger the plane and more roads are generated
-    [SerializeField] uint road_system_scale = 1;
     [SerializeField] int road_tile_size = 2;
     // % chance to generate junction in [0, 100]
     [SerializeField] int chance_to_pick_dir;
@@ -34,11 +32,10 @@ public class RoadGenerator : MonoBehaviour
 
     void Start()
     {
-        road_system_plane.GetComponent<Transform>().localScale = new Vector3(road_system_scale, road_system_scale, road_system_scale);
-        plane_min_corner.x = road_system_plane.GetComponent<MeshFilter>().mesh.bounds.min.x * road_system_scale;
-        plane_min_corner.y = road_system_plane.GetComponent<MeshFilter>().mesh.bounds.min.z * road_system_scale;
-        plane_max_corner.x = road_system_plane.GetComponent<MeshFilter>().mesh.bounds.max.x * road_system_scale;
-        plane_max_corner.y = road_system_plane.GetComponent<MeshFilter>().mesh.bounds.max.z * road_system_scale;
+        plane_min_corner.x = 0;
+        plane_min_corner.y = 0;
+        plane_max_corner.x = theTerrain.width;
+        plane_max_corner.y = theTerrain.height;
 
         var plane_width = (int)(plane_max_corner.x - plane_min_corner.x);
         num_cells_in_row = plane_width / road_tile_size;
@@ -171,7 +168,7 @@ public class RoadGenerator : MonoBehaviour
         float [] end_pos = new float[2];
 
         //checking if the road is turned and based on it change positions
-        switch (rotation.x)
+        switch (rotation.eulerAngles.y)
         {
             case 0.0f:
                 start_pos[0] = pos_x + road_tile_size / 2;
@@ -203,9 +200,11 @@ public class RoadGenerator : MonoBehaviour
 
         // for the time being since there is no map i will manually do the heights but normally it will be based on start_pos and end_pos
         //height where road starts
-        float start_height = 0.1f;
+        Vector3 signPosition = new Vector3(start_pos[0], 0, start_pos[1]);
+        float start_height = theTerrain.terrain.SampleHeight(signPosition);
         //height where end of the road
-        float end_height = 1.1f;
+        Vector3 signPosition2 = new Vector3(end_pos[0], 0, end_pos[1]);
+        float end_height = theTerrain.terrain.SampleHeight(signPosition2);
 
         float difference = start_height - end_height;
 

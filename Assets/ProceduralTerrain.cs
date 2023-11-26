@@ -14,17 +14,19 @@ public class ProceduralTerrain : MonoBehaviour
     public float offsetX = 100f;
     public float offsetY = 100f;
 
+    public Terrain terrain;
+
     private void Start()
     {
         offsetX = Random.Range(0f, 9999f);
         offsetY = Random.Range(0f, 9999f);
+        terrain = GetComponent<Terrain>();
+        terrain.terrainData = GenerateTerrain(terrain.terrainData);
     }
 
-    // move everything from update to start if dont want to adjust in real time
     private void Update()
     {
-        Terrain terrain = GetComponent<Terrain>();
-        terrain.terrainData = GenerateTerrain(terrain.terrainData);
+
     }
 
     TerrainData GenerateTerrain (TerrainData terrainData)
@@ -37,7 +39,7 @@ public class ProceduralTerrain : MonoBehaviour
         {
             for (int y = 0; y < height; y++)
             {
-                heights[x, y] = GetHeight(x, y);
+                heights[x, y] = GetHeight((float)x, (float)y);
             }
         }
 
@@ -45,10 +47,10 @@ public class ProceduralTerrain : MonoBehaviour
         return terrainData;
     }
 
-    float GetHeight (int x, int y)
+    public float GetHeight (float x, float y)
     {
-        float xCoord = (float)x / width * scale + offsetX;
-        float yCoord = (float)y / height * scale + offsetY;
+        float xCoord = x / width * scale + offsetX;
+        float yCoord = y / height * scale + offsetY;
 
         return Mathf.PerlinNoise(xCoord, yCoord);
     }

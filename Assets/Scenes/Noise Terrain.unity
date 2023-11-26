@@ -229,6 +229,7 @@ GameObject:
   - component: {fileID: 1330077295}
   - component: {fileID: 1330077294}
   - component: {fileID: 1330077293}
+  - component: {fileID: 1330077297}
   m_Layer: 0
   m_Name: Terrain
   m_TagString: Untagged
@@ -248,12 +249,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3da4316a8ef1cb4498d542f5d93da0af, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 256
-  height: 256
-  depth: 17
-  scale: 7
+  width: 65
+  height: 65
+  depth: 4
+  scale: 1
   offsetX: 100
   offsetY: 100
+  terrain: {fileID: 0}
 --- !u!154 &1330077294
 TerrainCollider:
   m_ObjectHideFlags: 0
@@ -328,6 +330,26 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1330077297
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1330077292}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c93d0b08eea7e4f4a98c827cbf987921, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  road_straight: {fileID: 919132149155446097, guid: 3dd32e4d76842a44a8c6a5400cb9a9c5, type: 3}
+  road_turn: {fileID: 919132149155446097, guid: d9d5ba525876c954eaf4f733e57e9981, type: 3}
+  road_3way: {fileID: 919132149155446097, guid: 43cba89a3aab0634288cf9dd06389548, type: 3}
+  road_4way: {fileID: 919132149155446097, guid: e47e6b832f0b58e4d8208082c100b35d, type: 3}
+  theTerrain: {fileID: 1330077293}
+  road_tile_size: 2
+  chance_to_pick_dir: 80
+  number_of_iterations: 4
 --- !u!1 &1915535112
 GameObject:
   m_ObjectHideFlags: 0
