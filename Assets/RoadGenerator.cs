@@ -210,7 +210,6 @@ public class RoadGenerator : MonoBehaviour
 
         if(difference == 0.0f) 
         {
-             // to be implemented get height of previous tile and give it rather than 0.1f
             road.GetComponent<Transform>().position = new Vector3(pos_x + road_tile_size / 2, start_height, pos_z + road_tile_size / 2);
             road.GetComponent<Transform>().rotation = rotation * (road.GetComponent<Transform>().rotation);
         }
