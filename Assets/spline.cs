@@ -318,7 +318,9 @@ public class spline : MonoBehaviour
             //List<float3> m_Reduced = new List<float3>();
             // Before setting spline knots, reduce the number of sample points.
             //SplineUtility.ReducePoints(list, m_Reduced, m_PointReductionEpsilon);
-
+            
+            // here you get reference to certain spline which is hold in splinecounter
+            // changes to this spline will result in changes of spline in unit component Spline (the one you access in your visual editor)
             var spline = splineContainer[counter];
 
             // Assign the reduced sample positions to the Spline knots collection. Here we are constructing new
