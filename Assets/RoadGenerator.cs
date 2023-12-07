@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using UnityEngine;
+using UnityEngine.Splines;
 
 
 public enum RoadType
@@ -15,6 +16,7 @@ public class RoadGenerator : MonoBehaviour
 {
 
     [SerializeField] ProceduralTerrain theTerrain;
+    public SplineContainer splineContainer_prefab;
     // AABB of the plane
     public Vector2 plane_min_corner, plane_max_corner;
     public int num_cells_in_row;
@@ -23,7 +25,7 @@ public class RoadGenerator : MonoBehaviour
     [SerializeField] int chance_to_pick_dir;
     [SerializeField] int number_of_iterations;
     [SerializeField] int max_num_4way_intersections = 60;
-
+    public Vector2Int riverStart, riverEnd;
     // Square grid that holds information about the road system
     public RoadType[,] road_type_grid;
 
@@ -48,6 +50,8 @@ public class RoadGenerator : MonoBehaviour
         num_cells_in_row = plane_width / road_tile_size;
         road_type_grid = new RoadType[num_cells_in_row, num_cells_in_row];
         InitializeRoadTypeGrid();
+        River river = new River(this);
+        river.MakeRiver();
         GenerateRoad(new Vector2Int(num_cells_in_row / 2, num_cells_in_row / 2), number_of_iterations); // start from center and use 5 iterations
         RoadTools rt = new RoadTools(this);
         rt.ExtrudeDeadEndingRoads();
