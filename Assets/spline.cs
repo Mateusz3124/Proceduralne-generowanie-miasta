@@ -14,7 +14,7 @@ public class spline : MonoBehaviour
     public RoadGenerator rg;
     public SplineContainer splineContainer;
     int num_cells_in_row;
-    List<List<float3>> mpoint;
+    public List<List<float3>> mpoint;
     bool[][] visited; 
 
     // Point reduction epsilon determines how aggressive the point reduction algorithm is when removing redundant
@@ -77,6 +77,7 @@ public class spline : MonoBehaviour
         var road_type_grid = rg.road_type_grid;
         var road_tile_size = rg.GetRoadTileSize();
         var theTerrain = rg.GetTerrain();
+        float extraHeight = 0.2f;
         //use only in loop
         int gridX = x - 1;
         int gridY = y;
@@ -96,8 +97,8 @@ public class spline : MonoBehaviour
                         start_pos[0] = realX + road_tile_size;
                         start_pos[1] = realY + road_tile_size / 2;
                         Vector3 signPosition = new Vector3(start_pos[0], 0, start_pos[1]);
-                        float start_height = theTerrain.terrain.SampleHeight(signPosition);
-                        listLeft.Add(new float3(start_pos[0], start_height, start_pos[1]));
+                        float start_height = theTerrain.terrain.SampleHeight(signPosition) + extraHeight;
+                        listLeft.Add(new Vector3(start_pos[0], start_height, start_pos[1]));
                     }
                     else
                     {
@@ -105,8 +106,8 @@ public class spline : MonoBehaviour
                         start_pos[0] = realX + road_tile_size;
                         start_pos[1] = realY + road_tile_size / 2;
                         Vector3 signPosition = new Vector3(start_pos[0], 0, start_pos[1]);
-                        float start_height = theTerrain.terrain.SampleHeight(signPosition);
-                        listLeft.Add(new float3(start_pos[0], start_height, start_pos[1]));
+                        float start_height = theTerrain.terrain.SampleHeight(signPosition) + extraHeight;
+                        listLeft.Add(new Vector3(start_pos[0], start_height, start_pos[1]));
                         GoInDirections(gridX, gridY);
                         break;
                     }
@@ -135,7 +136,7 @@ public class spline : MonoBehaviour
                     start_pos[0] = realX;
                     start_pos[1] = realY + road_tile_size / 2;
                     Vector3 signPosition = new Vector3(start_pos[0], 0, start_pos[1]);
-                    float start_height = theTerrain.terrain.SampleHeight(signPosition);
+                    float start_height = theTerrain.terrain.SampleHeight(signPosition) + extraHeight;
                     listRight.Add(new float3(start_pos[0], start_height, start_pos[1]));
                 }
                 else
@@ -144,7 +145,7 @@ public class spline : MonoBehaviour
                     start_pos[0] = realX;
                     start_pos[1] = realY + road_tile_size / 2;
                     Vector3 signPosition = new Vector3(start_pos[0], 0, start_pos[1]);
-                    float start_height = theTerrain.terrain.SampleHeight(signPosition);
+                    float start_height = theTerrain.terrain.SampleHeight(signPosition) + extraHeight;
                     listRight.Add(new float3(start_pos[0], start_height, start_pos[1]));
                     GoInDirections(gridX, gridY);
                     break;
@@ -174,8 +175,8 @@ public class spline : MonoBehaviour
                         start_pos[0] = realX + road_tile_size / 2;
                         start_pos[1] = realY;
                         Vector3 signPosition = new Vector3(start_pos[0], 0, start_pos[1]);
-                        float start_height = theTerrain.terrain.SampleHeight(signPosition);
-                        listTop.Add(new float3(start_pos[0], start_height, start_pos[1]));
+                        float start_height = theTerrain.terrain.SampleHeight(signPosition) + extraHeight;
+                        listTop.Add(new Vector3(start_pos[0], start_height, start_pos[1]));
                     }
                     else
                     {
@@ -183,8 +184,8 @@ public class spline : MonoBehaviour
                         start_pos[0] = realX + road_tile_size / 2;
                         start_pos[1] = realY;
                         Vector3 signPosition = new Vector3(start_pos[0], 0, start_pos[1]);
-                        float start_height = theTerrain.terrain.SampleHeight(signPosition);
-                        listTop.Add(new float3(start_pos[0], start_height, start_pos[1]));
+                        float start_height = theTerrain.terrain.SampleHeight(signPosition) + extraHeight;
+                        listTop.Add(new Vector3(start_pos[0], start_height, start_pos[1]));
                         GoInDirections(gridX, gridY);
                         break;
                     }
@@ -214,8 +215,8 @@ public class spline : MonoBehaviour
                         start_pos[0] = realX + road_tile_size / 2;
                         start_pos[1] = realY + road_tile_size;
                         Vector3 signPosition = new Vector3(start_pos[0], 0, start_pos[1]);
-                        float start_height = theTerrain.terrain.SampleHeight(signPosition);
-                        listDown.Add(new float3(start_pos[0], start_height, start_pos[1]));
+                        float start_height = theTerrain.terrain.SampleHeight(signPosition) + extraHeight;
+                        listDown.Add(new Vector3(start_pos[0], start_height, start_pos[1]));
                     }
                     else
                     {
@@ -223,8 +224,8 @@ public class spline : MonoBehaviour
                         start_pos[0] = realX + road_tile_size / 2;
                         start_pos[1] = realY + road_tile_size;
                         Vector3 signPosition = new Vector3(start_pos[0], 0, start_pos[1]);
-                        float start_height = theTerrain.terrain.SampleHeight(signPosition);
-                        listDown.Add(new float3(start_pos[0], start_height, start_pos[1]));
+                        float start_height = theTerrain.terrain.SampleHeight(signPosition) + extraHeight;
+                        listDown.Add(new Vector3(start_pos[0], start_height, start_pos[1]));
                         GoInDirections(gridX, gridY);
                         break;
                     }
@@ -312,10 +313,16 @@ public class spline : MonoBehaviour
 
     void BuildSplineBasedOnPoints()
     {
+        Flatten flat = new Flatten();
+        flat.rg = rg;
+        foreach (List<float3> list in mpoint)
+        {
+            flat.flattenBasedOnPoint(list, 2);
+        }
         int counter = 0;
         foreach (List<float3> list in mpoint)
         {
-            //List<float3> m_Reduced = new List<float3>();
+            //List<Vector3> m_Reduced = new List<Vector3>();
             // Before setting spline knots, reduce the number of sample points.
             //SplineUtility.ReducePoints(list, m_Reduced, m_PointReductionEpsilon);
 
