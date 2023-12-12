@@ -18,16 +18,6 @@ class VoronoiRegion
     public Dictionary<VoronoiRegion, List<Vector2Int>> neighbors = new Dictionary<VoronoiRegion, List<Vector2Int>>();
 };
 
-public class Pair<T1, T2>
-{
-    public Pair(T1 t1, T2 t2)
-    {
-        First = t1;
-        Second = t2;
-    }
-    public T1 First { get; set; }
-    public T2 Second { get; set; }
-}
 
 public class VoronoiRegionGenerator : MonoBehaviour
 {
@@ -41,7 +31,7 @@ public class VoronoiRegionGenerator : MonoBehaviour
     VoronoiRegion[,] instance_regions;
     List<VoronoiRegion> voronoi_regions = new List<VoronoiRegion>();
 
-    void Start()
+    void InitializeMap()
     {
         // init instances array
         instances = new GameObject[map_size.x, map_size.y];
@@ -56,8 +46,10 @@ public class VoronoiRegionGenerator : MonoBehaviour
                 instances[row, col] = Instantiate(square, pos, Quaternion.identity);
             }
         }
+    }
 
-        // create voronoi regions
+    void GenerateRandomVoronoiSeeds()
+    {
         for (int i = 0; i < number_of_regions; ++i)
         {
             var ix = RandomNumberGenerator.GetInt32(0, map_size.x);
@@ -84,8 +76,10 @@ public class VoronoiRegionGenerator : MonoBehaviour
                 (((float)RandomNumberGenerator.GetInt32(0, 51)) + 50.0f) / 100.0f));
             voronoi_regions.Add(vr);
         }
+    }
 
-        // assign tiles to the regions and apply colors
+    void GenerateVoronoiRegions()
+    {
         for (int row = 0; row < map_size.x; ++row)
         {
             for (int col = 0; col < map_size.y; ++col)
@@ -108,7 +102,10 @@ public class VoronoiRegionGenerator : MonoBehaviour
                 }
             }
         }
+    }
 
+    Dictionary<GameObject, HashSet<VoronoiRegion>> GetNeighboringRegionsForEachTile()
+    {
         Dictionary<GameObject, HashSet<VoronoiRegion>> instance_num_neighbors = new Dictionary<GameObject, HashSet<VoronoiRegion>>();
         for (int row = 0; row < map_size.x; ++row)
             for (int col = 0; col < map_size.y; ++col)
@@ -143,8 +140,14 @@ public class VoronoiRegionGenerator : MonoBehaviour
             }
         }
 
-        List<HashSet<VoronoiRegion>> intersections = new List<HashSet<VoronoiRegion>>();
-        Dictionary<GameObject, HashSet<VoronoiRegion>> intersections_to_draw = new Dictionary<GameObject, HashSet<VoronoiRegion>>();
+        return instance_num_neighbors;
+    }
+
+    Dictionary<GameObject, HashSet<GameObject>> GetRoadNetwork()
+    {
+        var instance_num_neighbors = GetNeighboringRegionsForEachTile();
+        List<HashSet<VoronoiRegion>> parsed_intersections = new List<HashSet<VoronoiRegion>>();
+        Dictionary<GameObject, HashSet<VoronoiRegion>> go_adjacent_regs = new Dictionary<GameObject, HashSet<VoronoiRegion>>();
         for (int row = 0; row < map_size.x; ++row)
         {
             for (int col = 0; col < map_size.y; ++col)
@@ -156,50 +159,92 @@ public class VoronoiRegionGenerator : MonoBehaviour
                 if (inn.ToArray().Length == 0) { continue; }
                 if (row == 0 || row == map_size.x - 1 || (row != 0 && row != map_size.x && (col == 0 || col == map_size.y - 1)))
                 {
-                    if (intersections.Any(hs => hs.ToArray().Length == 2 && hs.Contains(ireg) && inn.All(e => hs.Contains(e))))
+                    if (parsed_intersections.Any(hs => hs.ToArray().Length == 2 && hs.Contains(ireg) && inn.All(e => hs.Contains(e))))
                     {
                         continue;
                     }
                 }
-                else if (inn.ToArray().Length < 2 || intersections.Any(nhs => nhs.Contains(ireg) && inn.All(e => nhs.Contains(e))))
+                else if (inn.ToArray().Length < 2 || parsed_intersections.Any(nhs => nhs.Contains(ireg) && inn.All(e => nhs.Contains(e))))
                 {
                     continue;
                 }
 
-
                 var hs = new HashSet<VoronoiRegion> { ireg };
                 foreach (var vr in inn) { hs.Add(vr); }
-                intersections.Add(hs);
-                intersections_to_draw.Add(inst, hs);
+                parsed_intersections.Add(hs);
+                go_adjacent_regs.Add(inst, hs);
             }
         }
 
-        foreach (var i in intersections_to_draw)
+        Dictionary<GameObject, HashSet<GameObject>> intersections = new Dictionary<GameObject, HashSet<GameObject>>();
+        foreach (var i in go_adjacent_regs)
         {
-            foreach (var j in intersections_to_draw)
+            foreach (var j in go_adjacent_regs)
             {
                 if (i.Key == j.Key) { continue; }
-
-                var bigger = i.Value.ToArray().Length >= j.Value.ToArray().Length ? i : j;
-                var smaller = bigger.Key == i.Key ? j : i;
-
                 if (i.Value.Count(e => j.Value.Contains(e)) >= 2)
                 {
-                    Debug.DrawLine(i.Key.transform.position, j.Key.transform.position, Color.black, 100000.0f, false);
+                    if (!intersections.ContainsKey(i.Key)) { intersections[i.Key] = new HashSet<GameObject>(); }
+                    if (!intersections.ContainsKey(j.Key)) { intersections[j.Key] = new HashSet<GameObject>(); }
+                    intersections[i.Key].Add(j.Key);
+                    intersections[j.Key].Add(i.Key);
                 }
             }
         }
 
-        foreach (var i in intersections_to_draw)
+        return intersections;
+    }
+
+    void InvokeOnUniqueRoadConnection(Action<GameObject, GameObject> f)
+    {
+        TraverseRoadNetworkRec(GetRoadNetwork(), f);
+    }
+
+    void TraverseRoadNetworkRec(Dictionary<GameObject, HashSet<GameObject>> network, Action<GameObject, GameObject> custom_callback = null, GameObject node = null, Dictionary<GameObject, HashSet<GameObject>> drawn_connections = null)
+    {
+        if (drawn_connections == null) { drawn_connections = new Dictionary<GameObject, HashSet<GameObject>>(); }
+
+        if (node == null)
         {
-            if (i.Value.ToArray().Length == 2)
+            foreach (var i in network)
             {
-                ChangeTileColor(i.Key, Color.red);
+                TraverseRoadNetworkRec(network, custom_callback, i.Key, drawn_connections);
             }
-            else if (i.Value.ToArray().Length > 2)
-            {
-                ChangeTileColor(i.Key, Color.blue);
-            }
+
+            return;
+        }
+        if (drawn_connections.ContainsKey(node) && drawn_connections[node].ToArray().Length == network[node].ToArray().Length) { return; }
+
+        if (!drawn_connections.ContainsKey(node)) { drawn_connections[node] = new HashSet<GameObject>(); }
+
+        foreach (var i in network[node])
+        {
+            if (!drawn_connections.ContainsKey(i)) { drawn_connections[i] = new HashSet<GameObject>(); }
+            if (drawn_connections[node].Contains(i) || drawn_connections[i].Contains(node)) { continue; }
+            drawn_connections[node].Add(i);
+            drawn_connections[i].Add(node);
+
+            if (custom_callback != null) { custom_callback(node, i); }
+            TraverseRoadNetworkRec(network, custom_callback, i, drawn_connections);
+        }
+    }
+
+    void DebugDrawDebugLines()
+    {
+        InvokeOnUniqueRoadConnection((a, b) =>
+        {
+            Debug.DrawLine(a.transform.position, b.transform.position, Color.black, 10000.0f, false);
+        });
+    }
+
+    void DebugPaintIntersectionTiles(Dictionary<GameObject, HashSet<GameObject>> network)
+    {
+        foreach (var i in network)
+        {
+            var l = i.Value.ToArray().Length;
+            if(l == 0) { continue; }
+            if(l <= 2) { ChangeTileColor(i.Key, Color.red); }
+            if(l > 2) { ChangeTileColor(i.Key, Color.blue); }
         }
     }
 
@@ -207,4 +252,16 @@ public class VoronoiRegionGenerator : MonoBehaviour
     {
         go.GetComponent<MeshRenderer>().material.SetColor("_color", new_color);
     }
+
+    void Start()
+    {
+        InitializeMap();
+        GenerateRandomVoronoiSeeds();
+        GenerateVoronoiRegions();
+        var road_network = GetRoadNetwork();
+        DebugPaintIntersectionTiles(road_network);
+        DebugDrawDebugLines();
+    }
+
+
 }
