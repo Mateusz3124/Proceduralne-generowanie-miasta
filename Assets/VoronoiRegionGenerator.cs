@@ -242,9 +242,9 @@ public class VoronoiRegionGenerator : MonoBehaviour
         foreach (var i in network)
         {
             var l = i.Value.ToArray().Length;
-            if(l == 0) { continue; }
-            if(l <= 2) { ChangeTileColor(i.Key, Color.red); }
-            if(l > 2) { ChangeTileColor(i.Key, Color.blue); }
+            if (l == 0) { continue; }
+            if (l <= 2) { ChangeTileColor(i.Key, Color.red); }
+            if (l > 2) { ChangeTileColor(i.Key, Color.blue); }
         }
     }
 

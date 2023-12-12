@@ -339,8 +339,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   square: {fileID: 2009754642638039662, guid: 08c8756e142ac5e438eed737213ad21e, type: 3}
-  map_size: {x: 100, y: 150}
-  number_of_regions: 23
+  map_size: {x: 150, y: 300}
+  number_of_regions: 48
 --- !u!4 &592396197
 Transform:
   m_ObjectHideFlags: 0
