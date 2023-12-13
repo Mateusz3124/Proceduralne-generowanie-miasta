@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
+using Unity.Mathematics;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -104,131 +105,189 @@ public class VoronoiRegionGenerator : MonoBehaviour
         }
     }
 
-    Dictionary<GameObject, HashSet<VoronoiRegion>> GetNeighboringRegionsForEachTile()
+    bool IsOnTheEdge(GameObject o)
     {
-        Dictionary<GameObject, HashSet<VoronoiRegion>> instance_num_neighbors = new Dictionary<GameObject, HashSet<VoronoiRegion>>();
-        for (int row = 0; row < map_size.x; ++row)
-            for (int col = 0; col < map_size.y; ++col)
-                instance_num_neighbors[instances[row, col]] = new HashSet<VoronoiRegion>();
-
-        // create neighbor list
-        for (int row = 0; row < map_size.x; ++row)
-        {
-            for (int col = 0; col < map_size.y; ++col)
-            {
-                for (int i = -1; i <= 1; ++i)
-                {
-                    for (int j = -1; j <= 1; ++j)
-                    {
-                        if (i == 0 && j == 0) { continue; }
-
-                        var nrow = Math.Clamp(row + i, 0, map_size.x - 1);
-                        var ncol = Math.Clamp(col + j, 0, map_size.y - 1);
-
-                        if (instance_regions[row, col] != instance_regions[nrow, ncol])
-                        {
-                            var a = instance_regions[row, col];
-                            var b = instance_regions[nrow, ncol];
-                            if (!a.neighbors.ContainsKey(b)) { a.neighbors.Add(b, new List<Vector2Int>()); }
-                            if (!b.neighbors.ContainsKey(a)) { b.neighbors.Add(a, new List<Vector2Int>()); }
-                            a.neighbors[b].Add(new Vector2Int(nrow, ncol));
-                            b.neighbors[a].Add(new Vector2Int(row, col));
-                            instance_num_neighbors[instances[row, col]].Add(b);
-                        }
-                    }
-                }
-            }
-        }
-
-        return instance_num_neighbors;
+        var pos = o.transform.position;
+        return pos.x > 1 && pos.x < map_size.y - 1 && Math.Abs(pos.z) > 1 && Math.Abs(pos.z) < map_size.x - 1;
     }
 
-    Dictionary<GameObject, HashSet<GameObject>> GetRoadNetwork()
+    /*
+        This function probably could be a lot simpler, but there is just too many cases to handle in one go.
+    */
+    Dictionary<GameObject, HashSet<VoronoiRegion>> GetNeighboringRegionsForEachTile()
     {
-        var instance_num_neighbors = GetNeighboringRegionsForEachTile();
-        List<HashSet<VoronoiRegion>> parsed_intersections = new List<HashSet<VoronoiRegion>>();
-        Dictionary<GameObject, HashSet<VoronoiRegion>> go_adjacent_regs = new Dictionary<GameObject, HashSet<VoronoiRegion>>();
+        // Building a dictionary of every tile and it's neighboring regions (including it's own)
+        Dictionary<GameObject, HashSet<VoronoiRegion>> intersections = new Dictionary<GameObject, HashSet<VoronoiRegion>>();
         for (int row = 0; row < map_size.x; ++row)
         {
             for (int col = 0; col < map_size.y; ++col)
             {
                 var inst = instances[row, col];
-                var ireg = instance_regions[row, col];
-                var inn = instance_num_neighbors[inst];
-
-                if (inn.ToArray().Length == 0) { continue; }
-                if (row == 0 || row == map_size.x - 1 || (row != 0 && row != map_size.x && (col == 0 || col == map_size.y - 1)))
+                var reg = instance_regions[row, col];
+                intersections.Add(inst, new HashSet<VoronoiRegion>() { reg });
+                for (int i = -1; i <= 1; ++i)
                 {
-                    if (parsed_intersections.Any(hs => hs.ToArray().Length == 2 && hs.Contains(ireg) && inn.All(e => hs.Contains(e))))
+                    for (int j = -1; j <= 1; ++j)
                     {
-                        continue;
+                        var nrow = Math.Clamp(row + i, 0, map_size.x - 1);
+                        var ncol = Math.Clamp(col + j, 0, map_size.y - 1);
+                        var ninst = instances[nrow, ncol];
+                        var nreg = instance_regions[nrow, ncol];
+                        intersections[inst].Add(nreg);
                     }
                 }
-                else if (inn.ToArray().Length < 2 || parsed_intersections.Any(nhs => nhs.Contains(ireg) && inn.All(e => nhs.Contains(e))))
-                {
-                    continue;
-                }
-
-                var hs = new HashSet<VoronoiRegion> { ireg };
-                foreach (var vr in inn) { hs.Add(vr); }
-                parsed_intersections.Add(hs);
-                go_adjacent_regs.Add(inst, hs);
             }
         }
 
-        Dictionary<GameObject, HashSet<GameObject>> intersections = new Dictionary<GameObject, HashSet<GameObject>>();
-        foreach (var i in go_adjacent_regs)
+        // Series of loops that delete redundant intersections (if there are too many, they are too close to each other and the road looks bad)
+        HashSet<GameObject> to_delete = new HashSet<GameObject>();
+
+        // This loop handles intersections only on the border of the map.
+        // This is a special case, as I remove intersections when they intersect same set of regions
+        // But, for example, when there are only 2 regions, there will be 2 intersections of the same regions, BUT
+        // lying on different edges of the map and I don't want to remove them, even though they are considered to be duplicates.
+        // The list of bools is a list of 4 bool, each, when true, specifying that intersection
+        // exists on a particular edge of the map, and there shouldn't be any more on that edge.
+        Dictionary<HashSet<VoronoiRegion>, List<bool>> region_inter_edge_existence = new Dictionary<HashSet<VoronoiRegion>, List<bool>>();
+        foreach (var item in intersections)
         {
-            foreach (var j in go_adjacent_regs)
+            if (item.Value.ToArray().Length < 2) { to_delete.Add(item.Key); }
+            if (item.Value.ToArray().Length == 2)
             {
-                if (i.Key == j.Key) { continue; }
-                if (i.Value.Count(e => j.Value.Contains(e)) >= 2)
+                if (IsOnTheEdge(item.Key)) { to_delete.Add(item.Key); }
+                else
                 {
-                    if (!intersections.ContainsKey(i.Key)) { intersections[i.Key] = new HashSet<GameObject>(); }
-                    if (!intersections.ContainsKey(j.Key)) { intersections[j.Key] = new HashSet<GameObject>(); }
-                    intersections[i.Key].Add(j.Key);
-                    intersections[j.Key].Add(i.Key);
+                    var pos = item.Key.transform.position;
+                    var idx = -1;
+                    if (pos.x < 1) { idx = 0; }
+                    else if (pos.x > map_size.y - 1) { idx = 1; }
+                    else if (Math.Abs(pos.z) < 1) { idx = 2; }
+                    else if (Math.Abs(pos.z) > map_size.x - 1) { idx = 3; }
+                    Debug.Assert(idx != -1);
+                    List<bool> matching_list = null;
+                    foreach (var hs in region_inter_edge_existence)
+                    { if (hs.Key.All(e => item.Value.Contains(e))) { matching_list = hs.Value; break; } }
+
+                    if (matching_list == null)
+                    {
+                        List<bool> l = new List<bool>() { false, false, false, false };
+                        l[idx] = true;
+                        region_inter_edge_existence.Add(item.Value, l);
+                    }
+                    else if (matching_list != null && !matching_list[idx]) { matching_list[idx] = true; }
+                    else { to_delete.Add(item.Key); }
                 }
             }
         }
+        foreach (var item in to_delete) { intersections.Remove(item); }
+        to_delete.Clear();
+
+        // This loop deletes intersections of 3 or more regions.
+        // For example, when there are 3 intersecting regions, there will be
+        // many tiles that will be intersections of those 3 regions
+        // and this loops delete all but one
+        foreach (var i in intersections)
+        {
+            if (i.Value.ToArray().Length < 3) { continue; }
+            if (to_delete.Contains(i.Key)) { continue; }
+            foreach (var j in intersections)
+            {
+                if (j.Key == i.Key) { continue; }
+                if (to_delete.Contains(j.Key)) { continue; }
+
+                if (i.Value.ToArray().Length > 2 && i.Value.ToArray().Length == j.Value.ToArray().Length)
+                {
+                    if (i.Value.All(e => j.Value.Contains(e))) { to_delete.Add(j.Key); break; }
+                }
+            }
+        }
+
+        // This loops detects if there is a bigger set j, containing smaller set i.
+        // It removes clusters of intersections.
+        foreach (var i in intersections)
+        {
+            if (i.Value.ToArray().Length < 3) { continue; }
+            if (to_delete.Contains(i.Key)) { continue; }
+            HashSet<VoronoiRegion> superset = null;
+            foreach (var j in intersections)
+            {
+                if (j.Value.ToArray().Length < 4) { continue; }
+                if (i.Key == j.Key) { continue; }
+                if (to_delete.Contains(j.Key)) { continue; }
+                if (j.Value.ToArray().Length > i.Value.ToArray().Length && i.Value.All(e => j.Value.Contains(e)))
+                {
+                    superset = j.Value;
+                    break;
+                }
+            }
+            if (superset != null) { to_delete.Add(i.Key); }
+        }
+        foreach (var item in to_delete) { intersections.Remove(item); }
 
         return intersections;
     }
 
+    // Connect actual tiles with each other, based on the number of shared regions. 
+    Dictionary<GameObject, HashSet<GameObject>> GetRoadNetwork()
+    {
+        var neighbors = GetNeighboringRegionsForEachTile();
+        Dictionary<GameObject, HashSet<GameObject>> connections = new Dictionary<GameObject, HashSet<GameObject>>();
+
+        foreach (var i in neighbors)
+        {
+            if (!connections.ContainsKey(i.Key)) { connections.Add(i.Key, new HashSet<GameObject>()); }
+            foreach (var j in neighbors)
+            {
+                if (i.Key == j.Key) { continue; }
+                if (!connections.ContainsKey(j.Key)) { connections.Add(j.Key, new HashSet<GameObject>()); }
+
+                if (i.Value.Count(e => j.Value.Contains(e)) > 1)
+                {
+                    connections[i.Key].Add(j.Key);
+                    connections[j.Key].Add(i.Key);
+                }
+            }
+        }
+
+        return connections;
+    }
+
+    // This function will run your custom callback for every connected tile and pass the connected tiles
     void InvokeOnUniqueRoadConnection(Action<GameObject, GameObject> f)
     {
         TraverseRoadNetworkRec(GetRoadNetwork(), f);
     }
 
-    void TraverseRoadNetworkRec(Dictionary<GameObject, HashSet<GameObject>> network, Action<GameObject, GameObject> custom_callback = null, GameObject node = null, Dictionary<GameObject, HashSet<GameObject>> drawn_connections = null)
+    void TraverseRoadNetworkRec(Dictionary<GameObject, HashSet<GameObject>> network, Action<GameObject, GameObject> custom_callback = null, GameObject node = null, Dictionary<GameObject, HashSet<GameObject>> visited = null)
     {
-        if (drawn_connections == null) { drawn_connections = new Dictionary<GameObject, HashSet<GameObject>>(); }
+        if (visited == null) { visited = new Dictionary<GameObject, HashSet<GameObject>>(); }
 
         if (node == null)
         {
             foreach (var i in network)
             {
-                TraverseRoadNetworkRec(network, custom_callback, i.Key, drawn_connections);
+                TraverseRoadNetworkRec(network, custom_callback, i.Key, visited);
             }
 
             return;
         }
-        if (drawn_connections.ContainsKey(node) && drawn_connections[node].ToArray().Length == network[node].ToArray().Length) { return; }
-
-        if (!drawn_connections.ContainsKey(node)) { drawn_connections[node] = new HashSet<GameObject>(); }
+        
+        if (visited.ContainsKey(node) && visited[node].ToArray().Length == network[node].ToArray().Length) { return; }
+        if (!visited.ContainsKey(node)) { visited[node] = new HashSet<GameObject>(); }
 
         foreach (var i in network[node])
         {
-            if (!drawn_connections.ContainsKey(i)) { drawn_connections[i] = new HashSet<GameObject>(); }
-            if (drawn_connections[node].Contains(i) || drawn_connections[i].Contains(node)) { continue; }
-            drawn_connections[node].Add(i);
-            drawn_connections[i].Add(node);
+            if (!visited.ContainsKey(i)) { visited[i] = new HashSet<GameObject>(); }
+            if (visited[node].Contains(i) || visited[i].Contains(node)) { continue; }
+            visited[node].Add(i);
+            visited[i].Add(node);
 
             if (custom_callback != null) { custom_callback(node, i); }
-            TraverseRoadNetworkRec(network, custom_callback, i, drawn_connections);
+            TraverseRoadNetworkRec(network, custom_callback, i, visited);
         }
     }
 
+    // The lines are only visible when the "game" is running and you're in the Scene view, not Game.
     void DebugDrawDebugLines()
     {
         InvokeOnUniqueRoadConnection((a, b) =>
@@ -258,6 +317,12 @@ public class VoronoiRegionGenerator : MonoBehaviour
         InitializeMap();
         GenerateRandomVoronoiSeeds();
         GenerateVoronoiRegions();
+
+        /*
+            Use InvokeOnUniqueRoadConnection to work with the road network. See how DebugDrawDebugLines works.
+        */
+
+        GetNeighboringRegionsForEachTile();
         var road_network = GetRoadNetwork();
         DebugPaintIntersectionTiles(road_network);
         DebugDrawDebugLines();
