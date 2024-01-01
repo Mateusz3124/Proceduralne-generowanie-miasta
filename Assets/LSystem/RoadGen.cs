@@ -5,75 +5,88 @@ using UnityEngine;
 
 public class RoadGen : MonoBehaviour
 {
-    const int segment_count_limit = 2000;
+    public int segment_count_limit = 2000;
 
-    // a segment branching off at a 90 degree angle from an existing segment can vary its direction by +/- this amount
     const float BRANCH_ANGLE_DEVIATION = 3.0f; // degrees
-    // a segment continuing straight ahead from an existing segment can vary its direction by +/- this amount
     const float STRAIGHT_ANGLE_DEVIATION = 15.0f; // degrees
-    // segments are allowed to intersect if they have a large enough difference in direction - this helps enforce grid-like networks
-    const float MINIMUM_INTERSECTION_DEVIATION = 30.0f; // degrees
-    // try to produce 'normal' segments with this length if possible
-    const int DEFAULT_SEGMENT_LENGTH = 300; // world units
-    // try to produce 'highway' segments with this length if possible
-    const int HIGHWAY_SEGMENT_LENGTH = 400; // world units
-    // each 'normal' segment has this probability of producing a branching segment
+    const int HIGHWAY_SEGMENT_LENGTH = 400;
     const float DEFAULT_BRANCH_PROBABILITY = 0.4f;
-    // each 'highway' segment has this probability of producing a branching segment
     const float HIGHWAY_BRANCH_PROBABILITY = 0.05f;
-    // only place 'normal' segments when the population is high enough
+    // Branches are made based on perlin noise
+    // Higher noise value, more roads are there
     const float NORMAL_BRANCH_POPULATION_THRESHOLD = 0.5f;
-    // only place 'highway' segments when the population is high enough
     const float HIGHWAY_BRANCH_POPULATION_THRESHOLD = 0.5f;
-    // delay branching from 'highways' by this amount to prevent them from being blocked by 'normal' segments
+    // Snap action reach
+    const int MAX_SNAP_DISTANCE = 50;
+    const float SEGMENT_COLLIDER_WIDTH = 10.0f;
     const int NORMAL_BRANCH_TIME_DELAY_FROM_HIGHWAY = 5;
-    // allow a segment to intersect with an existing segment within this distance
-    const int MAX_SNAP_DISTANCE = 50; // world units
+    const int DEFAULT_SEGMENT_LENGTH = 300;
 
-    // select every nth segment to place buildings around - a lower period produces denser building placement
-    const int BUILDING_SEGMENT_PERIOD = 5;
-    // the number of buildings to generate per selected segment
-    const int BUILDING_COUNT_PER_SEGMENT = 10;
-    // the maximum distance that a building can be placed from a selected segment
-    const float MAX_BUILDING_DISTANCE_FROM_SEGMENT = 400.0f; // world units
-
-    public float RandomBranchAngle()
+    void Start() 
+    {
+        foreach(Segment s in GenerateSegments()) 
         {
-            return UnityEngine.Random.Range(-BRANCH_ANGLE_DEVIATION, BRANCH_ANGLE_DEVIATION);
+            MakeSegmentOnScene(s);
         }
+    }
 
-    public float RandomStraightAngle()
-        {
-            return UnityEngine.Random.Range(-STRAIGHT_ANGLE_DEVIATION, STRAIGHT_ANGLE_DEVIATION);
-        }
+    private void MakeSegmentOnScene(Segment segment) 
+    {
+        GameObject segmentObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
 
-    public List<Segment> GenerateSegments() {
+        Vector2 direction = segment.end - segment.start;
+        float length = direction.magnitude;
+
+        Vector2 positionVec = segment.start + 0.5f * direction;
+        segmentObject.transform.position = new Vector3(positionVec.x, 0f, positionVec.y);
+
+        segmentObject.transform.localScale = new Vector3(SEGMENT_COLLIDER_WIDTH, 0.01f, length);
+
+        Vector2 directionVector = direction.normalized;
+        segmentObject.transform.forward = new Vector3(directionVector.x, 0f, directionVector.y);
+    }
+
+    private float RandomBranchAngle()
+    {
+        return UnityEngine.Random.Range(-BRANCH_ANGLE_DEVIATION, BRANCH_ANGLE_DEVIATION);
+    }
+
+    private float RandomStraightContinueAngle()
+    {
+        return UnityEngine.Random.Range(-STRAIGHT_ANGLE_DEVIATION, STRAIGHT_ANGLE_DEVIATION);
+    }
+
+    public List<Segment> GenerateSegments() 
+    {
         List<Segment> segments = new List<Segment>();
         PriorityQueue<Segment, int> priorityQueue = new PriorityQueue<Segment, int>();
 
-        // Create the root segment and its opposite direction
-        Segment rootSegment = new Segment(new Vector2(0, 0), new Vector2(HIGHWAY_SEGMENT_LENGTH, 0), 0, new SegmentMetadata { highway = true });
-        Segment oppositeDirectionSegment = rootSegment.Clone();
-        oppositeDirectionSegment.end = new Vector2(rootSegment.start.x - HIGHWAY_SEGMENT_LENGTH, oppositeDirectionSegment.end.y);
-        oppositeDirectionSegment.linksB.Add(rootSegment);
-        rootSegment.linksB.Add(oppositeDirectionSegment);
-        priorityQueue.Push(rootSegment, rootSegment.t);
+        // Main segment and opposite direction segment
+        Segment mainSegment = new Segment(
+            new Vector2(0, 0), new Vector2(HIGHWAY_SEGMENT_LENGTH, 0),
+            0, new SegmentMetadata { highway = true });
+        Segment oppositeDirectionSegment = new Segment(
+            new Vector2(0, 0), new Vector2(-HIGHWAY_SEGMENT_LENGTH, 0),
+            0, new SegmentMetadata { highway = true });
+        oppositeDirectionSegment.linksB.Add(mainSegment);
+        mainSegment.linksB.Add(oppositeDirectionSegment);
+        priorityQueue.Push(mainSegment, mainSegment.t);
         priorityQueue.Push(oppositeDirectionSegment, oppositeDirectionSegment.t);
 
         while (priorityQueue.length > 0 && segments.Count < segment_count_limit)
         {
-            // Pop the segment with the smallest t value from the priority queue
+            // Segment with smallest t (highest priority)
             Segment minSegment = priorityQueue.Pop();
 
-            // Check if the segment is accepted by local constraints
+            // Accept or not by LocalConstraints
             bool isAccepted = LocalConstraints(minSegment, segments);
             if (isAccepted)
             {
                 minSegment.SetupBranchLinks();
-                //// ps att
+                minSegment.MakeCollider();
                 segments.Add(minSegment);
 
-                // Generate new segments based on global goals
+                // Generate new segments by GlobalGoalsGenerate
                 foreach (Segment newSegment in GlobalGoalsGenerate(minSegment))
                 {
                     newSegment.t = minSegment.t + 1 + newSegment.t;
@@ -85,43 +98,175 @@ public class RoadGen : MonoBehaviour
         return segments;
     }
 
-    public bool LocalConstraints(Segment segment, List<Segment> segments)
+    private bool LocalConstraints(Segment segment, List<Segment> segments)
     {
         Actions action = null;
         int actionPriority = 0;
-
+        float? previousIntersectionDistanceSquared = null;
         List<Segment> matches = new List<Segment>();
-        // Get intersections
-            ///......
-        ////
-        foreach (Segment other in matches)
+
+        // Check collision around segment
+        Vector3 pos3d = segment.CalculatePhysicsShapeTransform().position;
+        List<Segment> colliders = PhysicObjects.OverlapCircleSegments(new Vector2(pos3d.x, pos3d.z),
+                                                             segment.length * 0.5f + MAX_SNAP_DISTANCE);
+        foreach (Segment collidingSegment in colliders)
         {
+            if (collidingSegment != null)
+            {
+                matches.Add(collidingSegment);
+            }
+        }
+
+        foreach (Segment colliding in matches)
+        {
+            // Intersection check
             if (actionPriority <= 4)
             {
-                
+                var intersection = segment.IntersectionWith(colliding);
+                if (intersection != null)
+                {
+                    var intersectionDistanceSquared = ((Vector2)(intersection - segment.start)).sqrMagnitude;
+                    if (!previousIntersectionDistanceSquared.HasValue ||
+                        intersectionDistanceSquared < previousIntersectionDistanceSquared.Value)
+                    {
+                        previousIntersectionDistanceSquared = intersectionDistanceSquared;
+                        actionPriority = 4;
+                        action = new LocalConstraintsIntersectionAction(colliding, (Vector2)intersection);
+                    }
+                }
             }
 
+            // Dont make dead ends, try connect to intersection
             if (actionPriority <= 3)
             {
-                
+                float distanceSquared = (colliding.end - segment.end).sqrMagnitude;
+                if (distanceSquared <= MAX_SNAP_DISTANCE * MAX_SNAP_DISTANCE)
+                {
+                    actionPriority = 3;
+                    action = new LocalConstraintsSnapAction(colliding, colliding.end);
+                }
             }
+
+            // Try connect segment.end to nearest point on colliding segment and check angle
             if (actionPriority <= 2)
             {
-                
+                if (PhysicObjects.IsPointInSegmentRange(segment.end, colliding.start, colliding.end))
+                {
+                    var intersection = PhysicObjects.GetClosestPointOnSegment(segment.end, colliding.start, colliding.end);
+                    float distanceSquared = (segment.end - intersection).sqrMagnitude;
+                    if (distanceSquared < MAX_SNAP_DISTANCE * MAX_SNAP_DISTANCE)
+                    {
+                        actionPriority = 2;
+                        action = new LocalConstraintsIntersectionRadiusAction(colliding, intersection);
+                    }
+                }
             }
         }
 
         if (action != null)
         {
-            return action.Apply(segment, segments);
+            return action.MakeAction(segment, segments);
         }
 
         return true;
-
     }
 
-    private List<Segment> GlobalGoalsGenerate(Segment segment) {
+    private List<Segment> GlobalGoalsGenerate(Segment previousSegment) {
+        List<Segment> newBranches = new List<Segment>();
 
-        return null;
+        if (!previousSegment.metadata.severed)
+        {
+            Segment continueStraight = SegmentContinue(previousSegment, previousSegment.direction);
+            float straightPop = SamplePopulation(continueStraight.start, continueStraight.end);
+
+            if (previousSegment.metadata.highway)
+            {
+                float randomStraightAngle = RandomStraightContinueAngle();
+                Segment randomStraight = SegmentContinue(
+                    previousSegment, previousSegment.direction + randomStraightAngle
+                );
+                float randomPop = SamplePopulation(randomStraight.start, randomStraight.end);
+                float roadPop;
+                if (randomPop > straightPop)
+                {
+                    newBranches.Add(randomStraight);
+                    roadPop = randomPop;
+                }
+                else
+                {
+                    newBranches.Add(continueStraight);
+                    roadPop = straightPop;
+                }
+                if (roadPop > HIGHWAY_BRANCH_POPULATION_THRESHOLD)
+                {
+                    if (UnityEngine.Random.Range(0f, 1f) < HIGHWAY_BRANCH_PROBABILITY)
+                    {
+                        Segment leftHighwayBranch = SegmentContinue(
+                            previousSegment, previousSegment.direction - 90f + RandomBranchAngle()
+                        );
+                        newBranches.Add(leftHighwayBranch);
+                    }
+                    else if (UnityEngine.Random.Range(0f, 1f) < HIGHWAY_BRANCH_PROBABILITY)
+                    {
+                        Segment rightHighwayBranch = SegmentContinue(
+                            previousSegment, previousSegment.direction + 90f + RandomBranchAngle()
+                        );
+                        newBranches.Add(rightHighwayBranch);
+                    }
+                }
+
+            }
+            else if (straightPop > NORMAL_BRANCH_POPULATION_THRESHOLD)
+            {
+                newBranches.Add(continueStraight);
+            }
+
+            if (straightPop > NORMAL_BRANCH_POPULATION_THRESHOLD)
+            {
+                if (UnityEngine.Random.Range(0f, 1f) < DEFAULT_BRANCH_PROBABILITY)
+                {
+                    Segment leftBranch = SegmentBranch(
+                        previousSegment, previousSegment.direction - 90f + RandomBranchAngle()
+                    );
+                    newBranches.Add(leftBranch);
+                }
+                else if (UnityEngine.Random.Range(0f, 1f) < DEFAULT_BRANCH_PROBABILITY)
+                {
+                    Segment rightBranch = SegmentBranch(
+                        previousSegment, previousSegment.direction + 90f + RandomBranchAngle()
+                    );
+                    newBranches.Add(rightBranch);
+                }
+            }
+        } 
+        foreach (var branch in newBranches)
+        {
+            branch.previousSegmentToLink = previousSegment;
+        }
+
+        return newBranches;
+    }
+
+    private Segment SegmentContinue(Segment previousSegment, float direction) {
+        return Segment.CreateUsingDirection(
+            previousSegment.end, direction,
+            previousSegment.length, 0, previousSegment.metadata
+        );
+    }
+    
+    private Segment SegmentBranch(Segment previousSegment, float direction)
+    {
+        int t = previousSegment.metadata.highway ? NORMAL_BRANCH_TIME_DELAY_FROM_HIGHWAY : 0;
+        return Segment.CreateUsingDirection(
+            previousSegment.end, direction,
+            DEFAULT_SEGMENT_LENGTH, t, new SegmentMetadata()
+        );
+    }
+
+    private float SamplePopulation(Vector2 start, Vector2 end)
+    {
+        float s_start = (Mathf.PerlinNoise(start.x, start.y) + 1.0f) / 2f;
+        float s_end = (Mathf.PerlinNoise(end.x, end.y) + 1.0f) / 2f;
+        return (s_start + s_end) / 2f;
     }
 }
