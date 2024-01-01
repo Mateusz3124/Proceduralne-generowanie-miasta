@@ -16,9 +16,9 @@ public class River
     private Spline river;
     private Vector2Int gridSize;
     private int tileSize;
-    private RoadGenerator rg;
+    private Road_Generator rg;
 
-    public River(RoadGenerator rg) {
+    public River(Road_Generator rg) {
         this.rg = rg;
         gridSize = new Vector2Int(rg.num_cells_in_row, rg.num_cells_in_row);
         tileSize = rg.GetRoadTileSize();
