@@ -20,13 +20,9 @@ public class RoadGenerator : MonoBehaviour
     [SerializeField] ProceduralTerrain theTerrain;
     // AABB of the plane
     Vector2 plane_min_corner, plane_max_corner;
-<<<<<<< HEAD
-    int num_cells_in_row;
-=======
     public int num_cells_in_row;
     // The bigger the scale, the bigger the plane and more roads are generated
     [SerializeField] uint road_system_scale = 1;
->>>>>>> voronoi-roads
     [SerializeField] int road_tile_size = 2;
     // % chance to generate junction in [0, 100]
     [SerializeField] int chance_to_pick_dir;
@@ -158,17 +154,12 @@ public class RoadGenerator : MonoBehaviour
                 {
                     case RoadType.Road:
                         Quaternion rotation;
-<<<<<<< HEAD
-                        var road = Instantiate(GetRoadVariantBasedOnNeighboringTiles(new Vector2Int(i, j), out rotation));
-                        DrawRoadBasedOnAngle(road, rotation, i, j);
-=======
                         var road_gameobject = GetRoadVariantBasedOnNeighboringTiles(new Vector2Int(i, j), out rotation);
                         if (road_gameobject == null) { continue; }
                         var road = Instantiate(road_gameobject);
                         float pos_x = plane_min_corner.x + road_tile_size * i, pos_z = plane_min_corner.y + road_tile_size * j;
                         road.GetComponent<Transform>().position = new Vector3(pos_x + road_tile_size / 2, 0.1f, pos_z + road_tile_size / 2);
                         road.GetComponent<Transform>().rotation = rotation * road.GetComponent<Transform>().rotation;
->>>>>>> voronoi-roads
                         break;
                     default:
                         break;

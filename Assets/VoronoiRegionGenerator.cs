@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using Unity.Mathematics;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Splines;
 
 class VoronoiRegion
 {
@@ -25,12 +26,14 @@ public class VoronoiRegionGenerator : MonoBehaviour
     [SerializeField] GameObject square;
     [SerializeField] Vector2Int map_size = new Vector2Int(100, 150);
     [SerializeField] int number_of_regions = 30;
+    [SerializeField] SplineContainer splineContainer = new SplineContainer();
     Vector3 start_square = new Vector3(0.5f, 0.0f, -0.5f);
     Vector3 row_dir = Vector3.back;
     Vector3 col_dir = Vector3.right;
     GameObject[,] instances;
     VoronoiRegion[,] instance_regions;
     List<VoronoiRegion> voronoi_regions = new List<VoronoiRegion>();
+
 
     void InitializeMap()
     {
@@ -292,7 +295,16 @@ public class VoronoiRegionGenerator : MonoBehaviour
     {
         InvokeOnUniqueRoadConnection((a, b) =>
         {
-            Debug.DrawLine(a.transform.position, b.transform.position, Color.black, 10000.0f, false);
+            // Debug.DrawLine(a.transform.position, b.transform.position, Color.black, 10000.0f, false);
+            var road = new Spline();
+            var ta = a.transform.position;
+            var tb = b.transform.position;
+            ta.y += 0.1f;
+            tb.y += 0.1f;
+
+            road.Add(new BezierKnot(ta));
+            road.Add(new BezierKnot(tb));
+            splineContainer.AddSpline(road);
         });
     }
 

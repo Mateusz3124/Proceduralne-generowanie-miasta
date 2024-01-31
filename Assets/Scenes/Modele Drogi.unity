@@ -253,11 +253,7 @@ MonoBehaviour:
   road_system_plane: {fileID: 335055519}
   road_system_scale: 7
   road_tile_size: 2
-<<<<<<< HEAD
-  chance_to_pick_dir: 80
-=======
   chance_to_pick_dir: 93
->>>>>>> voronoi-roads
   number_of_iterations: 5
   max_num_4way_intersections: 120
 --- !u!23 &335055521
