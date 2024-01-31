@@ -1,7 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Mathematics;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.Splines;
 
 public class RoadGen : MonoBehaviour
 {
@@ -28,12 +31,28 @@ public class RoadGen : MonoBehaviour
         {
             MakeSegmentOnScene(s);
         }
+        SplineRoadMesh splineRoadMesh = new SplineRoadMesh();
+        splineRoadMesh.segments = 11;
+        splineRoadMesh.roadWidth = (float)2;
+        splineRoadMesh.radius = 0.15f;
+        float3 gobjPos = transform.position;
+        splineRoadMesh.gobjPos = gobjPos;
+        splineRoadMesh.generateRoad();
     }
 
     private void MakeSegmentOnScene(Segment segment) 
     {
-        GameObject segmentObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        List<float3> list = new List<float3>();
+        float3 position1 = new float3(segment.start.y, 0f, segment.start.x);
+        float3 position2 = new float3(segment.end.y, 0f, segment.end.x);
+        list.Add(position1);
+        list.Add(position2);
+        SplineContainer splineContainer = GameObject.Find("LSystemGen").GetComponent<SplineContainer>();
+        Spline spline = splineContainer.AddSpline();
+        spline.Knots = list.Select(x => new BezierKnot(x));
 
+        /*
+        GameObject segmentObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
         Vector2 direction = segment.end - segment.start;
         float length = direction.magnitude;
 
@@ -44,6 +63,7 @@ public class RoadGen : MonoBehaviour
 
         Vector2 directionVector = direction.normalized;
         segmentObject.transform.forward = new Vector3(directionVector.x, 0f, directionVector.y);
+        */
     }
 
     private float RandomBranchAngle()

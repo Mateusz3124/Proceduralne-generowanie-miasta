@@ -38,8 +38,8 @@ public class SplineRoadMesh : MonoBehaviour
 
     public void generateRoad()
     {
-        meshFilter = GameObject.Find("Terrain").GetComponent<MeshFilter>();
-        roadSpline = GameObject.Find("Terrain").GetComponent<SplineContainer>();
+        meshFilter = GameObject.Find("LSystemGen").GetComponent<MeshFilter>();
+        roadSpline = GameObject.Find("LSystemGen").GetComponent<SplineContainer>();
         calculateRoadVerticies();
     }
 
@@ -154,7 +154,7 @@ public class SplineRoadMesh : MonoBehaviour
         mesh.SetVertices(verticies);
         mesh.SetTriangles(triangles, 0);
         meshFilter.mesh = mesh;
-        MeshCollider meshCollider = GameObject.Find("Road").AddComponent<MeshCollider>();
+        MeshCollider meshCollider = GameObject.Find("LSystemGen").AddComponent<MeshCollider>();
         meshCollider.sharedMesh = mesh;
     }
 }
