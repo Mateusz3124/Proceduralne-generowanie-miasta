@@ -253,7 +253,7 @@ MonoBehaviour:
   road_system_plane: {fileID: 335055519}
   road_system_scale: 7
   road_tile_size: 2
-  chance_to_pick_dir: 55
+  chance_to_pick_dir: 80
   number_of_iterations: 5
 --- !u!23 &335055521
 MeshRenderer:

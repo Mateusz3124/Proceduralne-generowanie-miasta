@@ -4,48 +4,58 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using UnityEngine;
+using UnityEngine.Splines;
 
+
+public enum RoadType
+{
+    Empty, Obstacle, Road
+}
 
 public class RoadGenerator : MonoBehaviour
 {
 
-    [SerializeField] GameObject road_straight;
-    [SerializeField] GameObject road_turn;
-    [SerializeField] GameObject road_3way;
-    [SerializeField] GameObject road_4way;
-    [SerializeField] GameObject road_system_plane;
+    [SerializeField] ProceduralTerrain theTerrain;
+    public SplineContainer splineContainer_prefab;
     // AABB of the plane
-    Vector2 plane_min_corner, plane_max_corner;
-    int num_cells_in_row;
-    // The bigger the scale, the bigger the plane and more roads are generated
-    [SerializeField] uint road_system_scale = 1;
+    public Vector2 plane_min_corner, plane_max_corner;
+    public int num_cells_in_row;
     [SerializeField] int road_tile_size = 2;
     // % chance to generate junction in [0, 100]
     [SerializeField] int chance_to_pick_dir;
     [SerializeField] int number_of_iterations;
-
-    enum RoadType
-    {
-        Empty, Obstacle, Road
-    }
+    [SerializeField] int max_num_4way_intersections = 60;
+    public Vector2Int riverStart, riverEnd;
     // Square grid that holds information about the road system
-    RoadType[,] road_type_grid;
+    public RoadType[,] road_type_grid;
 
+    public int GetRoadTileSize()
+    {
+        return road_tile_size;
+    }
+
+    public ProceduralTerrain GetTerrain()
+    {
+        return theTerrain;
+    }
 
     void Start()
     {
-        road_system_plane.GetComponent<Transform>().localScale = new Vector3(road_system_scale, road_system_scale, road_system_scale);
-        plane_min_corner.x = road_system_plane.GetComponent<MeshFilter>().mesh.bounds.min.x * road_system_scale;
-        plane_min_corner.y = road_system_plane.GetComponent<MeshFilter>().mesh.bounds.min.z * road_system_scale;
-        plane_max_corner.x = road_system_plane.GetComponent<MeshFilter>().mesh.bounds.max.x * road_system_scale;
-        plane_max_corner.y = road_system_plane.GetComponent<MeshFilter>().mesh.bounds.max.z * road_system_scale;
+        plane_min_corner.x = 0;
+        plane_min_corner.y = 0;
+        plane_max_corner.x = theTerrain.width;
+        plane_max_corner.y = theTerrain.height;
 
         var plane_width = (int)(plane_max_corner.x - plane_min_corner.x);
         num_cells_in_row = plane_width / road_tile_size;
         road_type_grid = new RoadType[num_cells_in_row, num_cells_in_row];
         InitializeRoadTypeGrid();
+        River river = new River(this);
+        river.MakeRiver();
         GenerateRoad(new Vector2Int(num_cells_in_row / 2, num_cells_in_row / 2), number_of_iterations); // start from center and use 5 iterations
-        DrawRoadBasedOnRoadTypeGrid(); // using data in road_type_grid, instantiate correct prefabs to visualize the road.
+        RoadTools rt = new RoadTools(this);
+        rt.ExtrudeDeadEndingRoads();
+        rt.DeleteRandom4WayIntersectionsUntilUnderLimit(max_num_4way_intersections);
     }
 
     /*
@@ -98,12 +108,12 @@ public class RoadGenerator : MonoBehaviour
         {
             neighbours_in_current_and_previous = checkIfAnyNeighboursNotIndirection(array_dimension, current_pos, neighbours_in_current_and_previous, out previousIsAlreadyExistingRoad);
             // Counts to 2 because some roades ends one tile before border (suprisingly often)  
-            if (neighbours_in_current_and_previous == 2) 
+            if (neighbours_in_current_and_previous == 2)
             {
                 if (previousIsAlreadyExistingRoad) { break; }
                 current_pos -= direction;
                 road_type_grid[current_pos.x, current_pos.y] = RoadType.Empty;
-                break; 
+                break;
             }
             road_type_grid[current_pos.x, current_pos.y] = RoadType.Road;
             current_pos += direction;
@@ -114,7 +124,7 @@ public class RoadGenerator : MonoBehaviour
     int checkIfAnyNeighboursNotIndirection(int array_dimension, Vector2Int grid_pos, int neighbours_in_current_and_previous, out bool previousIsAlreadyExistingRoad)
     {
         //if encounter existing road change previousIsAlreadyExistingRoad to true so it is not deleted
-        if (road_type_grid[grid_pos.x, grid_pos.y] == RoadType.Road) { previousIsAlreadyExistingRoad = true;  return 1; }
+        if (road_type_grid[grid_pos.x, grid_pos.y] == RoadType.Road) { previousIsAlreadyExistingRoad = true; return 1; }
         else { previousIsAlreadyExistingRoad = false; }
         switch (array_dimension)
         {
@@ -122,7 +132,7 @@ public class RoadGenerator : MonoBehaviour
                 bool up = false, down = false;
                 if (grid_pos.y > 0) { down = road_type_grid[grid_pos.x, grid_pos.y - 1] == RoadType.Road; }
                 if (grid_pos.y < num_cells_in_row - 1) { up = road_type_grid[grid_pos.x, grid_pos.y + 1] == RoadType.Road; }
-                if(up || down)
+                if (up || down)
                 {
                     return ++neighbours_in_current_and_previous;
                 }
@@ -138,83 +148,6 @@ public class RoadGenerator : MonoBehaviour
                 return 0;
         }
         throw new Exception("Bad value of array_dimension");
-    } 
-
-    void DrawRoadBasedOnRoadTypeGrid()
-    {
-        for (int i = 0; i < num_cells_in_row; ++i)
-        {
-            for (int j = 0; j < num_cells_in_row; ++j)
-            {
-                switch (road_type_grid[i, j])
-                {
-                    case RoadType.Road:
-                        Quaternion rotation;
-                        var road = Instantiate(GetRoadVariantBasedOnNeighboringTiles(new Vector2Int(i, j), out rotation));
-                        float pos_x = plane_min_corner.x + road_tile_size * i, pos_z = plane_min_corner.y + road_tile_size * j;
-                        road.GetComponent<Transform>().position = new Vector3(pos_x + road_tile_size / 2, 0.1f, pos_z + road_tile_size / 2);
-                        road.GetComponent<Transform>().rotation = rotation * road.GetComponent<Transform>().rotation;
-                        break;
-                    default:
-                        break;
-                }
-            }
-        }
-    }
-
-    /*
-        Picks matching road tile according to it's neighbors
-        and also calculates neccessary orientation to fit them.
-    */
-    GameObject GetRoadVariantBasedOnNeighboringTiles(Vector2Int grid_pos, out Quaternion orientation)
-    {
-        bool up = false, down = false, left = false, right = false;
-        if (grid_pos.y > 0) { down = road_type_grid[grid_pos.x, grid_pos.y - 1] == RoadType.Road; }
-        if (grid_pos.y < num_cells_in_row - 1) { up = road_type_grid[grid_pos.x, grid_pos.y + 1] == RoadType.Road; }
-        if (grid_pos.x > 0) { left = road_type_grid[grid_pos.x - 1, grid_pos.y] == RoadType.Road; }
-        if (grid_pos.x < num_cells_in_row - 1) { right = road_type_grid[grid_pos.x + 1, grid_pos.y] == RoadType.Road; }
-
-        int num_of_non_empty_neighbors = 0;
-        if (up) { ++num_of_non_empty_neighbors; }
-        if (down) { ++num_of_non_empty_neighbors; }
-        if (left) { ++num_of_non_empty_neighbors; }
-        if (right) { ++num_of_non_empty_neighbors; }
-
-        orientation = Quaternion.identity;
-        switch (num_of_non_empty_neighbors)
-        {
-            case 1:
-                if (up || down) { orientation = Quaternion.identity; }
-                else { orientation = Quaternion.AngleAxis(90.0f, Vector3.up); }
-                return road_straight;
-            case 2:
-                if (up && down)
-                {
-                    orientation = Quaternion.identity;
-                    return road_straight;
-                }
-                if (left && right)
-                {
-                    orientation = Quaternion.AngleAxis(90.0f, Vector3.up);
-                    return road_straight;
-                }
-
-                if (up && left) { orientation = Quaternion.identity; }
-                else if (up && right) { orientation = Quaternion.AngleAxis(90.0f, Vector3.up); }
-                else if (right && down) { orientation = Quaternion.AngleAxis(180.0f, Vector3.up); }
-                else if (down && left) { orientation = Quaternion.AngleAxis(270.0f, Vector3.up); }
-                return road_turn;
-            case 3:
-                if (right && left && down) { orientation = Quaternion.AngleAxis(90.0f, Vector3.up); }
-                else if (right && left && up) { orientation = Quaternion.AngleAxis(-90.0f, Vector3.up); }
-                else if (up && down && right) { orientation = Quaternion.identity; }
-                else if (up && down && left) { orientation = Quaternion.AngleAxis(180.0f, Vector3.up); }
-                return road_3way;
-            case 4:
-                return road_4way;
-            default:
-                throw new Exception("Single road tile without any road neighbors is an error in the generating algorithm");
-        }
     }
 
     void InitializeRoadTypeGrid(RoadType init_type = RoadType.Empty)
