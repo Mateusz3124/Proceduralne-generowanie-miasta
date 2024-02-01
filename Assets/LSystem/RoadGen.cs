@@ -24,13 +24,10 @@ public class RoadGen : MonoBehaviour
 
     void Start() 
     {
-        foreach(Segment s in GenerateSegments()) 
-        {
-            MakeSegmentOnScene(s);
-        }
+
     }
 
-    private void MakeSegmentOnScene(Segment segment) 
+    public void MakeSegmentOnScene(Segment segment) 
     {
         GameObject segmentObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
 
@@ -56,17 +53,16 @@ public class RoadGen : MonoBehaviour
         return UnityEngine.Random.Range(-STRAIGHT_ANGLE_DEVIATION, STRAIGHT_ANGLE_DEVIATION);
     }
 
-    public List<Segment> GenerateSegments() 
+    public List<Segment> GenerateSegments(Vector2 center) 
     {
         List<Segment> segments = new List<Segment>();
         PriorityQueue<Segment, int> priorityQueue = new PriorityQueue<Segment, int>();
-
         // Main segment and opposite direction segment
         Segment mainSegment = new Segment(
-            new Vector2(0, 0), new Vector2(HIGHWAY_SEGMENT_LENGTH, 0),
+            center, new Vector2(center.x + HIGHWAY_SEGMENT_LENGTH, center.y),
             0, new SegmentMetadata { highway = true });
         Segment oppositeDirectionSegment = new Segment(
-            new Vector2(0, 0), new Vector2(-HIGHWAY_SEGMENT_LENGTH, 0),
+            center, new Vector2(center.x-HIGHWAY_SEGMENT_LENGTH, center.y),
             0, new SegmentMetadata { highway = true });
         oppositeDirectionSegment.linksB.Add(mainSegment);
         mainSegment.linksB.Add(oppositeDirectionSegment);

@@ -45,7 +45,7 @@ public class ProceduralTerrain : MonoBehaviour
             }
         }
     }
-    private void Start()
+   public void generate()
     {
         offsetX = UnityEngine.Random.Range(0f, 9999f);
         offsetY = UnityEngine.Random.Range(0f, 9999f);
@@ -68,6 +68,11 @@ public class ProceduralTerrain : MonoBehaviour
         center.y = (float)numberOfTilesZ /2*height;
     }
 
+    private void Start()
+    {
+
+    }
+
     private void Update()
     {
 
@@ -77,7 +82,14 @@ public class ProceduralTerrain : MonoBehaviour
     {
         int tileX = (int)Math.Floor(x / width);
         int tileZ = (int)Math.Floor(z / height);
-        GameObject temp = terrains[tileX, tileZ];
+        GameObject temp;
+        try
+        {
+            temp = terrains[tileX, tileZ];
+        } catch (Exception)
+        {
+            return 0f;
+        }
         Terrain terrain = temp.GetComponent<Terrain>();
         Vector3 position = new Vector3(x, 0, z);
         float resultHeight = terrain.SampleHeight(position);
