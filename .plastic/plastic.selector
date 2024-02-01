@@ -1,4 +1,0 @@
-repository "Town@MatSob@cloud"
-  path "/"
-    br "/main"
-    co "/main"

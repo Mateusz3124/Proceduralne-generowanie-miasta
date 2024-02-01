@@ -159,7 +159,6 @@ public class RoadTools : MonoBehaviour
 
         return four_way_inters;
     }
-
     /*
         This functions gets a list of 4 way intersection tiles in the
         road_type_grid and randomly deletes them until there are no more
