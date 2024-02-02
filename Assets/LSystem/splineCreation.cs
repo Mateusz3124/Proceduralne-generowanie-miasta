@@ -37,7 +37,7 @@ public class splineCreation : MonoBehaviour
 
         float3 positionFirst = new float3(segment.start.x, proceduralTerrain.getHeight(segment.start.x, segment.start.y) + heightOffset, segment.start.y);
         list.Add(positionFirst);
-        //how often there is knot inside spline
+        //how far away are knots
         float knotOffset = 40;
 
         if (length > knotOffset)
