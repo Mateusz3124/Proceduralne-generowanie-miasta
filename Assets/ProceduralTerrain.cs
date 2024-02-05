@@ -41,7 +41,7 @@ public class ProceduralTerrain : MonoBehaviour
         {
             for (int y = 0; y < resolution * numberOfTilesX; y++)
             {
-                heightsMapLocal[x, y] = GetHeight(x, y);
+                heightsMapLocal[x, y] = GetHeightPerlin(x, y);
             }
         }
     }
@@ -113,7 +113,7 @@ public class ProceduralTerrain : MonoBehaviour
         return terrainData;
     }
 
-    public float GetHeight (float x, float y)
+    public float GetHeightPerlin (float x, float y)
     {
         float xCoord = x / width * scale + offsetX;
         float yCoord = y / height * scale + offsetY;
