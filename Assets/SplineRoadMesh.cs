@@ -33,37 +33,20 @@ public class SplineRoadMesh : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        meshFilter = GetComponent<MeshFilter>();
-        roadSpline = GetComponent<SplineContainer>();
-    }
 
-    private void OnValidate()
-    {
-        calculateRoadVerticies();
     }
-
-    private void OnEnable()
-    {
-        Spline.Changed += splineChanged;
-        calculateRoadVerticies();
-    }
-
-    private void OnDisable()
-    {
-        Spline.Changed -= splineChanged;
-    }
-
-    private void splineChanged(Spline arg1, int arg2, SplineModification arg3)
-    {
-        calculateRoadVerticies();
-    }
-
     private void OnDrawGizmos()
     {
         if (!drawGizmos)
             return;
 
         calculateRoadVerticies(true);
+    }
+    public void createMesh()
+    {
+        meshFilter = GetComponent<MeshFilter>();
+        roadSpline = GetComponent<SplineContainer>();
+        calculateRoadVerticies();
     }
 
     private void calculateRoadVerticies(bool onGizmos = false)
