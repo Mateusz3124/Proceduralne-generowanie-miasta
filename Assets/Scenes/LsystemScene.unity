@@ -328,7 +328,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30389616bb10ee34090fddcffd062ff8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sm: {fileID: 0}
+  sm: {fileID: 1789418053}
 --- !u!114 &1789418052
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -371,7 +371,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   road_width: 5
   road_segments: 10
-  material: {fileID: 0}
+  material: {fileID: 2100000, guid: dcd18e700ded0614583af7b14f395377, type: 2}
 --- !u!114 &1789418054
 MonoBehaviour:
   m_ObjectHideFlags: 0
