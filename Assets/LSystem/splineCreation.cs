@@ -43,20 +43,10 @@ public class splineCreation : MonoBehaviour
         if (length > knotOffset)
         {
             float lengthFraction = knotOffset / length;
-            Vector2 pointToAdd = segment.start + ((segment.end - segment.start) * lengthFraction);
-
-            float3 positionInside = new float3(pointToAdd.x, proceduralTerrain.getHeight(pointToAdd.x, pointToAdd.y) + heightOffset, pointToAdd.y);
-            list.Add(positionInside);
-
-            int counter = 2;
+            int counter = 1;
 
             while(lengthFraction * counter<1)
             {
-                if(counter == 20)
-                {
-                    Debug.Log("went wrong");
-                    break;
-                }
                 pointToAdd = segment.start + ((segment.end - segment.start) * lengthFraction * counter);
                 counter++;
                 positionInside = new float3(pointToAdd.x, proceduralTerrain.getHeight(pointToAdd.x, pointToAdd.y) + heightOffset, pointToAdd.y);
