@@ -29,7 +29,7 @@ public class splineCreation : MonoBehaviour
     }
     public void createSpline(Segment segment, ProceduralTerrain proceduralTerrain, SplineContainer splineContainer)
     {
-        float heightOffset = 1f;
+        float heightOffset = 0.3f;
         Vector2 direction = segment.end - segment.start;
         float length = direction.magnitude;
 
@@ -58,5 +58,7 @@ public class splineCreation : MonoBehaviour
         list.Add(positionLast);
         Spline spline = splineContainer.AddSpline();
         spline.Knots = list.Select(x => new BezierKnot(x));
+        var all = new SplineRange(0, spline.Count);
+        spline.SetTangentMode(all, TangentMode.AutoSmooth);
     }
 }

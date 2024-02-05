@@ -113,7 +113,7 @@ public class ProceduralTerrain : MonoBehaviour
         return terrainData;
     }
 
-    private float GetHeightPerlin (float x, float y)
+    public float GetHeightPerlin (float x, float y)
     {
         float xCoord = x / width * scale + offsetX;
         float yCoord = y / height * scale + offsetY;
