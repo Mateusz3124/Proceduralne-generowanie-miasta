@@ -47,9 +47,9 @@ public class splineCreation : MonoBehaviour
 
             while(lengthFraction * counter<1)
             {
-                pointToAdd = segment.start + ((segment.end - segment.start) * lengthFraction * counter);
+                Vector2 pointToAdd = segment.start + ((segment.end - segment.start) * lengthFraction * counter);
                 counter++;
-                positionInside = new float3(pointToAdd.x, proceduralTerrain.getHeight(pointToAdd.x, pointToAdd.y) + heightOffset, pointToAdd.y);
+                float3 positionInside = new float3(pointToAdd.x, proceduralTerrain.getHeight(pointToAdd.x, pointToAdd.y) + heightOffset, pointToAdd.y);
                 list.Add(positionInside);
             }
         }
