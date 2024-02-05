@@ -293,19 +293,18 @@ public class VoronoiRegionGenerator : MonoBehaviour
     // The lines are only visible when the "game" is running and you're in the Scene view, not Game.
     void DebugDrawDebugLines()
     {
+        Spline r = new Spline();
         InvokeOnUniqueRoadConnection((a, b) =>
         {
             // Debug.DrawLine(a.transform.position, b.transform.position, Color.black, 10000.0f, false);
-            var road = new Spline();
             var ta = a.transform.position;
             var tb = b.transform.position;
             ta.y += 0.1f;
             tb.y += 0.1f;
 
-            road.Add(new BezierKnot(ta));
-            road.Add(new BezierKnot(tb));
-            splineContainer.AddSpline(road);
+            r.Add(new BezierKnot(ta)); 
         });
+            splineContainer.AddSpline(r);
     }
 
     void DebugPaintIntersectionTiles(Dictionary<GameObject, HashSet<GameObject>> network)
