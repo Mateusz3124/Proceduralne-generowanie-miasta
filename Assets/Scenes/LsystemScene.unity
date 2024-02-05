@@ -310,9 +310,9 @@ MonoBehaviour:
   offsetX: 100
   offsetY: 100
   terrain: {fileID: 0}
-  resolution: 2049
-  numberOfTilesX: 3
-  numberOfTilesZ: 3
+  resolution: 4097
+  numberOfTilesX: 2
+  numberOfTilesZ: 2
   borderX: 0
   borderZ: 0
   center: {x: 0, y: 0}

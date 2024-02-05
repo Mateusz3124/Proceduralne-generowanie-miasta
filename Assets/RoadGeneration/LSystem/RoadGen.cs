@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class RoadGen : MonoBehaviour
@@ -21,6 +23,12 @@ public class RoadGen : MonoBehaviour
     const float SEGMENT_COLLIDER_WIDTH = 10.0f;
     const int NORMAL_BRANCH_TIME_DELAY_FROM_HIGHWAY = 5;
     const int DEFAULT_SEGMENT_LENGTH = 300;
+
+    // borders to lsystem
+    // has default values but its better to set manually
+    public Vector2 minCorner {get; set;} = new Vector2(0f, 0f);
+    public Vector2 maxCorner {get; set;} = new Vector2(512f, 512f);
+
 
     void Start() 
     {
@@ -235,12 +243,21 @@ public class RoadGen : MonoBehaviour
                 }
             }
         } 
-        foreach (var branch in newBranches)
+
+        // filter branches that extend beyond the boundaries of the area
+        var newBranchesFiltered = newBranches.Where(b => { 
+            return b.start.x >= minCorner.x && b.start.x < maxCorner.x &&
+                    b.start.y >= minCorner.y && b.start.y < maxCorner.y &&
+                b.end.x >= minCorner.x && b.end.x < maxCorner.x &&
+                    b.end.y >= minCorner.y && b.end.y < maxCorner.y;
+        });
+        
+        foreach (var branch in newBranchesFiltered)
         {
             branch.previousSegmentToLink = previousSegment;
         }
 
-        return newBranches;
+        return newBranchesFiltered.ToList();
     }
 
     private Segment SegmentContinue(Segment previousSegment, float direction) {

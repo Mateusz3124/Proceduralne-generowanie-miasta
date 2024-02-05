@@ -14,7 +14,11 @@ public class Control : MonoBehaviour
     {
         proceduralTerrain = GetComponent<ProceduralTerrain>();
         proceduralTerrain.generate();
+
         RoadGen roadGen = GetComponent<RoadGen>();
+        roadGen.minCorner = new Vector2(0f, 0f);
+        roadGen.maxCorner = new Vector2(proceduralTerrain.borderX, proceduralTerrain.borderZ);
+        
         splineCreation splines = GetComponent<splineCreation>();
         splines.createSplines(proceduralTerrain, roadGen);
         sm.CreateMesh(GetComponent<SplineContainer>(), transform);
