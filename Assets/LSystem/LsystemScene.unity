@@ -442,7 +442,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c0e32f364d27bf44595ec68cd1f8f1a1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  segment_count_limit: 2000
+  segment_count_limit: 500
 --- !u!4 &1789418046
 Transform:
   m_ObjectHideFlags: 0
@@ -470,14 +470,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3da4316a8ef1cb4498d542f5d93da0af, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 4096
-  height: 4096
+  width: 32
+  height: 32
   depth: 50
   scale: 5
   offsetX: 100
   offsetY: 100
   terrain: {fileID: 0}
-  resolution: 4097
+  resolution: 32
   numberOfTilesX: 3
   numberOfTilesZ: 3
   borderX: 0

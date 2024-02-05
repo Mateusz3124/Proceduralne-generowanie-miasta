@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.Rendering.HighDefinition;
 using UnityEngine.Splines;
 
 public class SplineRoadMesh : MonoBehaviour
 {
     [SerializeField]
     MeshFilter meshFilter;
-    List<Vector3> rightVerticies;
-    List<Vector3> leftVerticies;
+    List<Vector3> rightVertices;
+    List<Vector3> leftVertices;
 
     [SerializeField]
     SplineContainer roadSpline;
@@ -26,34 +27,25 @@ public class SplineRoadMesh : MonoBehaviour
 
     public bool drawGizmos = false;
 
-    float3 position;
-    float3 forward;
-    float3 upVector;
-
-    // Start is called before the first frame update
-    void Start()
-    {
-
-    }
+    float3 position, forward, up;
     private void OnDrawGizmos()
     {
         if (!drawGizmos)
             return;
 
-        calculateRoadVerticies(true);
+        calculateRoadVertices(true);
     }
     public void createMesh()
     {
         meshFilter = GetComponent<MeshFilter>();
         roadSpline = GetComponent<SplineContainer>();
-        calculateRoadVerticies();
+        calculateRoadVertices(true);
     }
-
-    private void calculateRoadVerticies(bool onGizmos = false)
+    private void calculateRoadVertices(bool onGizmos = false)
     {
         int splineCount = roadSpline.Splines.Count;
-        rightVerticies = new List<Vector3>();
-        leftVerticies = new List<Vector3>();
+        rightVertices = new List<Vector3>();
+        leftVertices = new List<Vector3>();
 
         float3 gobjPos = transform.position;
 
@@ -67,10 +59,10 @@ public class SplineRoadMesh : MonoBehaviour
 
             for (int i = 0; i < segments; i++)
             {
-                roadSpline.Evaluate(splineIndex, currentPos, out position, out forward, out upVector);
+                roadSpline.Evaluate(splineIndex, currentPos, out position, out forward, out up);
                 position -= gobjPos;
                 
-                rightDir = Vector3.Cross(forward, upVector).normalized;
+                rightDir = Vector3.Cross(forward, up).normalized;
                 rightSide = position + rightDir * roadWidth;
                 leftSide = position - rightDir * roadWidth;
 
@@ -85,24 +77,78 @@ public class SplineRoadMesh : MonoBehaviour
                     Gizmos.DrawLine(rightSide, leftSide);
                 }
 
-                rightVerticies.Add(rightSide);
-                leftVerticies.Add(leftSide);
+                rightVertices.Add(rightSide);
+                leftVertices.Add(leftSide);
                 currentPos += step;
             }
 
-            roadSpline.Evaluate(splineIndex, 1f, out position, out forward, out upVector);
+            roadSpline.Evaluate(splineIndex, 1f, out position, out forward, out up);
             position -= gobjPos;
 
-            rightDir = Vector3.Cross(forward, upVector).normalized;
+            rightDir = Vector3.Cross(forward, up).normalized;
             rightSide = position + rightDir * roadWidth;
             leftSide = position - rightDir * roadWidth;
 
-            rightVerticies.Add(rightSide);
-            leftVerticies.Add(leftSide);
+            rightVertices.Add(rightSide);
+            leftVertices.Add(leftSide);
         }
 
         buildMesh();
     }
+    // private void calculateRoadVertices(bool onGizmos = false)
+    // {
+    //     int splineCount = roadSpline.Splines.Count;
+    //     rightVertices = new List<Vector3>();
+    //     leftVertices = new List<Vector3>();
+
+    //     float3 gobjPos = transform.position;
+
+    //     for (int splineIndex = 0; splineIndex < splineCount; splineIndex++)
+    //     {
+    //         bool isClosed = roadSpline.Splines[splineIndex].Closed;
+    //         float step = (isClosed ? 1.0f / segments : 1.0f / (segments - 1));
+    //         float currentPos = (isClosed ? step : 0);
+
+    //         float3 rightDir, rightSide, leftSide;
+
+    //         for (int i = 0; i < segments; i++)
+    //         {
+    //             roadSpline.Evaluate(splineIndex, currentPos, out position, out forward, out up);
+    //             position -= gobjPos;
+                
+    //             rightDir = Vector3.Cross(forward, up).normalized;
+    //             rightSide = position + rightDir * roadWidth;
+    //             leftSide = position - rightDir * roadWidth;
+
+    //             if (onGizmos)
+    //             {
+    //                 Gizmos.color = Color.white;
+    //                 Gizmos.DrawSphere(position, radius);
+
+    //                 Gizmos.color = Color.cyan;
+    //                 Gizmos.DrawSphere(rightSide, radius);
+    //                 Gizmos.DrawSphere(leftSide, radius);
+    //                 Gizmos.DrawLine(rightSide, leftSide);
+    //             }
+
+    //             rightVertices.Add(rightSide);
+    //             leftVertices.Add(leftSide);
+    //             currentPos += step;
+    //         }
+
+    //         roadSpline.Evaluate(splineIndex, 1f, out position, out forward, out up);
+    //         position -= gobjPos;
+
+    //         rightDir = Vector3.Cross(forward, up).normalized;
+    //         rightSide = position + rightDir * roadWidth;
+    //         leftSide = position - rightDir * roadWidth;
+
+    //         rightVertices.Add(rightSide);
+    //         leftVertices.Add(leftSide);
+    //     }
+
+    //     buildMesh();
+    // }
 
     private void buildMesh()
     {
@@ -120,19 +166,19 @@ public class SplineRoadMesh : MonoBehaviour
             for (int i = 1; i <= segments; i++)
             {
                 int vertOff = splineOffset + i;
-                Vector3 p1 = rightVerticies[vertOff - 1];
-                Vector3 p2 = leftVerticies[vertOff - 1];
+                Vector3 p1 = rightVertices[vertOff - 1];
+                Vector3 p2 = leftVertices[vertOff - 1];
                 Vector3 p3, p4;
 
                 if (isClosed && vertOff == splineOffset + segments)
                 {
-                    p3 = rightVerticies[splineOffset];
-                    p4 = leftVerticies[splineOffset];
+                    p3 = rightVertices[splineOffset];
+                    p4 = leftVertices[splineOffset];
                 }
                 else
                 {
-                    p3 = rightVerticies[vertOff];
-                    p4 = leftVerticies[vertOff];
+                    p3 = rightVertices[vertOff];
+                    p4 = leftVertices[vertOff];
                 }
 
                 offset = 4 * segments * currSplIdx;
