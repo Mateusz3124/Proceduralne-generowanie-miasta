@@ -12,8 +12,9 @@ public class SplineMesh : MonoBehaviour
     private GameObject AddGameObject() {
         meshes.Add(new GameObject());
         var go = meshes[meshes.Count() - 1];
-        go.AddComponent<MeshFilter>(); 
-        go.AddComponent<MeshRenderer>(); 
+        go.AddComponent<MeshFilter>();
+        MeshRenderer meshRenderer = go.AddComponent<MeshRenderer>();
+        meshRenderer.material = material;
         return go;
     }
     public void CreateMesh(SplineContainer s, Transform parent) {
@@ -66,6 +67,7 @@ public class SplineMesh : MonoBehaviour
 
     [SerializeField] float road_width = 0.5f;
     [SerializeField] uint road_segments = 10;
+    [SerializeField] Material material;
 
     static List<GameObject> meshes = new List<GameObject>();
 }

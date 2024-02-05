@@ -29,7 +29,7 @@ public class splineCreation : MonoBehaviour
     }
     public void createSpline(Segment segment, ProceduralTerrain proceduralTerrain, SplineContainer splineContainer)
     {
-        float heightOffset = 1f;
+        float heightOffset = 0.3f;
         Vector2 direction = segment.end - segment.start;
         float length = direction.magnitude;
 
@@ -43,23 +43,13 @@ public class splineCreation : MonoBehaviour
         if (length > knotOffset)
         {
             float lengthFraction = knotOffset / length;
-            Vector2 pointToAdd = segment.start + ((segment.end - segment.start) * lengthFraction);
-
-            float3 positionInside = new float3(pointToAdd.x, proceduralTerrain.getHeight(pointToAdd.x, pointToAdd.y) + heightOffset, pointToAdd.y);
-            list.Add(positionInside);
-
-            int counter = 2;
+            int counter = 1;
 
             while(lengthFraction * counter<1)
             {
-                if(counter == 20)
-                {
-                    Debug.Log("went wrong");
-                    break;
-                }
-                pointToAdd = segment.start + ((segment.end - segment.start) * lengthFraction * counter);
+                Vector2 pointToAdd = segment.start + ((segment.end - segment.start) * lengthFraction * counter);
                 counter++;
-                positionInside = new float3(pointToAdd.x, proceduralTerrain.getHeight(pointToAdd.x, pointToAdd.y) + heightOffset, pointToAdd.y);
+                float3 positionInside = new float3(pointToAdd.x, proceduralTerrain.getHeight(pointToAdd.x, pointToAdd.y) + heightOffset, pointToAdd.y);
                 list.Add(positionInside);
             }
         }
@@ -68,5 +58,7 @@ public class splineCreation : MonoBehaviour
         list.Add(positionLast);
         Spline spline = splineContainer.AddSpline();
         spline.Knots = list.Select(x => new BezierKnot(x));
+        var all = new SplineRange(0, spline.Count);
+        spline.SetTangentMode(all, TangentMode.AutoSmooth);
     }
 }
