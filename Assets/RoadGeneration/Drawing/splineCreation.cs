@@ -58,5 +58,6 @@ public class splineCreation : MonoBehaviour
         list.Add(positionLast);
         Spline spline = splineContainer.AddSpline();
         spline.Knots = list.Select(x => new BezierKnot(x));
+        spline.SetTangentMode(TangentMode.AutoSmooth);
     }
 }
