@@ -24,7 +24,6 @@ public class SplineMesh : MonoBehaviour
 
         foreach (var sp in s.Splines)
         {
-            sp.SetTangentMode(TangentMode.AutoSmooth);
             GameObject go = AddGameObject();
             go.transform.parent = parent;
             go.transform.position = parent.position;
