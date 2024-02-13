@@ -6,6 +6,7 @@ using UnityEngine;
 public class PhysicObjects
 {
     public static HashSet<Segment> segmentsColliders = new HashSet<Segment>();
+    public static HashSet<Building> buildingsColliders = new HashSet<Building>();
     
     // s1, s2 - start and end (or end and start) of segment
     public static Vector2 GetClosestPointOnSegment(Vector2 point, Vector2 s1, Vector2 s2)
@@ -29,18 +30,33 @@ public class PhysicObjects
         return dot >= 0 && dot <= vec.sqrMagnitude;
     }
 
-    public static bool CheckCollision(Segment segment, Vector2 circleCenter, float radius)
+    public static bool CheckSegmentCollision(Segment segment, Vector2 circleCenter, float radius)
     {
         Vector2 closestPoint = GetClosestPointOnSegment(segment.start, segment.end, circleCenter);
 
         return Vector2.Distance(closestPoint, circleCenter) < radius;
     }
 
+    public static bool CheckBuildingCollision(Building building, Vector2 circleCenter, float radius) {
+        /////////////////////
+        return false;
+    }
+
     public static List<Segment> OverlapCircleSegments(Vector2 circleCenter, float radius) {
         List<Segment> matches = new List<Segment>();
         foreach(Segment segment in segmentsColliders) {
-            if(CheckCollision(segment, circleCenter, radius)) {
+            if(CheckSegmentCollision(segment, circleCenter, radius)) {
                 matches.Add(segment);
+            }
+        }
+        return matches;
+    }
+
+    public static List<Building> OverlapCircleBuildings(Vector2 circleCenter, float radius) {
+        List<Building> matches = new List<Building>();
+        foreach(Building building in buildingsColliders) {
+            if(CheckBuildingCollision(building, circleCenter, radius)) {
+                matches.Add(building);
             }
         }
         return matches;
