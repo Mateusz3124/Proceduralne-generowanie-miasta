@@ -256,6 +256,7 @@ GameObject:
   - component: {fileID: 1789418052}
   - component: {fileID: 1789418053}
   - component: {fileID: 1789418054}
+  - component: {fileID: 1789418055}
   m_Layer: 0
   m_Name: LSystemGen
   m_TagString: Untagged
@@ -305,7 +306,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   width: 4097
   height: 4097
-  depth: 100
+  depth: 20
   scale: 5
   offsetX: 100
   offsetY: 100
@@ -313,6 +314,7 @@ MonoBehaviour:
   resolution: 4097
   numberOfTilesX: 2
   numberOfTilesZ: 2
+  prefab: {fileID: 1507636620937791836, guid: 7097ba7ba649e1f41bba232312bdcbd8, type: 3}
   borderX: 0
   borderZ: 0
   center: {x: 0, y: 0}
@@ -370,6 +372,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   road_width: 5
+  road_height: 0.5
   road_segments: 10
   material: {fileID: 2100000, guid: dcd18e700ded0614583af7b14f395377, type: 2}
 --- !u!114 &1789418054
@@ -384,6 +387,45 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 532488d41b3ab964ba276e1b1a5b0c37, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  heightOffset: 0.3
+--- !u!114 &1789418055
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1789418044}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41cad8420eaf5c34d9da544bcf68f3e3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  PerimeterRampCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 1
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 1
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  PerimeterRampDistance: 5
+  ApplyPerimeterRampCurve: 0
 --- !u!1 &1902108075
 GameObject:
   m_ObjectHideFlags: 0
