@@ -9,12 +9,11 @@ using TreeEditor;
 
 public class flatten_for_river : MonoBehaviour
 {
-    float terrainTileSize;
-
     //"Optional shaped ramp around perimeter."
     public AnimationCurve PerimeterRampCurve = AnimationCurve.Linear(0, 0, 1, 1);
 
     //Size of gaussian filter applied to change array. Set to zero for none"
+    [HideInInspector]
     public int PerimeterRampDistance = 1;
 
     //"Use Perimeter Ramp Curve in lieu of direct gaussian smooth."
@@ -57,7 +56,6 @@ public class flatten_for_river : MonoBehaviour
         float[,] source = blendStencil;         // this is NOT a copy! This is a reference!
         for (int n = 0; n <= distance; n++)
         {
-            Debug.Log(Time.realtimeSinceStartup);
             // add it to the pile BEFORE we expand it;
             // that way the first one is the original
             // input blendStencil.
@@ -164,7 +162,6 @@ public class flatten_for_river : MonoBehaviour
         // WARNING: this is also an output operation, as it modifies the
         // blendStencil inbound dataset
         //
-        Debug.Log(Time.realtimeSinceStartup);
         for (int j = 0; j < h; j++)
         {
             for (int i = 0; i < w; i++)
@@ -184,26 +181,24 @@ public class flatten_for_river : MonoBehaviour
         // Debug: WritePNG( blendStencil, "blend");
     }
 
-
-
     //main function of flattening the terriang base on detecting mesh using raycast
-    public float[,] changeTerrain(float[,] heightsMapLocal)
+    public void changeTerrain(GameObject objectTerrain, List<int2> list)
     {
-        int Tw = heightsMapLocal.GetLength(0);
-        int Th = heightsMapLocal.GetLength(1);
-        var heightMapOriginal = heightsMapLocal;
+        TerrainData terData = objectTerrain.GetComponent<Terrain>().terrainData;
+        int Tw = terData.heightmapResolution;
+        int Th = terData.heightmapResolution;
+        var heightMapOriginal = terData.GetHeights(0, 0, Tw, Th);
         // where we do our work when we generate the new terrain heights
         var heightMapCreated = new float[heightMapOriginal.GetLength(0), heightMapOriginal.GetLength(1)];
         // for blending heightMapCreated with the heightMapOriginal to form
         var heightAlpha = new float[heightMapOriginal.GetLength(0), heightMapOriginal.GetLength(1)];
-        for (int x = 1000; x < 1010; x++)
+
+        foreach(int2 elem in list)
         {
-            for (int z = 0; z < Th; z++)
-            {
-                heightMapCreated[z, x] = 0.0f;
-                heightAlpha[z, x] = 1.0f;
-            }
+            heightMapCreated[elem.y, elem.x] = 0.0f;
+            heightAlpha[elem.y, elem.x] = 1.0f;
         }
+
         // now we might smooth things out a bit
         if (PerimeterRampDistance > 0)
         {
@@ -236,7 +231,7 @@ public class flatten_for_river : MonoBehaviour
                     fraction);
             }
         }
-        return heightMapOriginal;
+        terData.SetHeights(0, 0, heightMapOriginal);
     }
 
     void Start()

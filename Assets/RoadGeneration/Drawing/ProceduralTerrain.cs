@@ -35,8 +35,8 @@ public class ProceduralTerrain : MonoBehaviour
     public int borderZ;
     [HideInInspector]
     public Vector2 center;
-
-    private GameObject[,] terrains;
+    [HideInInspector]
+    public GameObject[,] terrains;
     private void setHeights()
     {
         heightsMapLocal = new float[resolution * numberOfTilesZ, resolution * numberOfTilesX];
@@ -53,8 +53,6 @@ public class ProceduralTerrain : MonoBehaviour
         offsetX = UnityEngine.Random.Range(0f, 9999f);
         offsetY = UnityEngine.Random.Range(0f, 9999f);
         setHeights();
-        //flatten_for_river flatten = GetComponent<flatten_for_river>();
-        //heightsMapLocal = flatten.changeTerrain(heightsMapLocal);
         terrains = new GameObject[numberOfTilesX, numberOfTilesZ];
         borderX = width * numberOfTilesX;
         borderZ = height * numberOfTilesZ;
@@ -71,9 +69,6 @@ public class ProceduralTerrain : MonoBehaviour
         }
         center.x = (float)numberOfTilesX/2*width;
         center.y = (float)numberOfTilesZ /2*height;
-        //GameObject water = Instantiate(prefab);
-        //water.transform.position = new Vector3(center.x, 0.01f, center.y);
-        //water.transform.localScale = new Vector3((borderX/50)+1,1,(borderZ/50)+1);
     }
 
     private void Start()
@@ -91,13 +86,7 @@ public class ProceduralTerrain : MonoBehaviour
         int tileX = (int)Math.Floor(x / width);
         int tileZ = (int)Math.Floor(z / height);
         GameObject temp;
-        try
-        {
-            temp = terrains[tileX, tileZ];
-        } catch (Exception)
-        {
-            return 0f;
-        }
+        temp = terrains[tileX, tileZ];
         Terrain terrain = temp.GetComponent<Terrain>();
         Vector3 position = new Vector3(x, 0, z);
         float resultHeight = terrain.SampleHeight(position);
