@@ -23,9 +23,9 @@ public class Control : MonoBehaviour
         splines.createSplines(proceduralTerrain, roadGen);
         sm.CreateMesh(GetComponent<SplineContainer>(), transform);
 
-        river_Control river = GetComponent<river_Control>();
-        river._proceduralTerrain = proceduralTerrain;
-        river.riverToTerrain(river.createRiver());
+        //river_Control river = GetComponent<river_Control>();
+        //river._proceduralTerrain = proceduralTerrain;
+        //river.riverToTerrain(river.createRiver());
     }
 
     // Update is called once per frame
