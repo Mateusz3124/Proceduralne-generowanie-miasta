@@ -19,10 +19,10 @@ public class splineCreation : MonoBehaviour
     void Update()
     {
     }
-    public void createSplines(ProceduralTerrain proceduralTerrain, RoadGen roadGen)
+    public void createSplines(ProceduralTerrain proceduralTerrain, List<Segment> list)
     {
         SplineContainer splineContainer = GetComponent<SplineContainer>();
-        foreach (Segment s in roadGen.GenerateSegments(proceduralTerrain.center))
+        foreach (Segment s in list)
         {
             createSpline(s, proceduralTerrain, splineContainer);
         }
