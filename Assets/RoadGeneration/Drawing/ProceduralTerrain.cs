@@ -4,6 +4,7 @@ using UnityEngine;
 using System;
 using Unity.Mathematics;
 using UnityEditor;
+using UnityEngine.UI;
 
 public class ProceduralTerrain : MonoBehaviour
 {
@@ -62,7 +63,8 @@ public class ProceduralTerrain : MonoBehaviour
                 TerrainData terrainData = new TerrainData();
                 terrainData = GenerateTerrain(terrainData, x* (resolution-1), z* (resolution-1));
                 GameObject terrainObject = Terrain.CreateTerrainGameObject(terrainData);
-                terrainMaterial.SetFloat("_terrain_size", width);
+                terrainMaterial.SetFloat("_terrain_size_x", borderX);
+                terrainMaterial.SetFloat("_terrain_size_z", borderZ);
                 terrainObject.GetComponent<Terrain>().materialTemplate = terrainMaterial;
                 terrainObject.transform.position = new Vector3Int(x*width, 0, z*height);
                 terrains[x, z] = terrainObject;
@@ -74,7 +76,6 @@ public class ProceduralTerrain : MonoBehaviour
 
     private void Start()
     {
-
     }
 
     private void Update()

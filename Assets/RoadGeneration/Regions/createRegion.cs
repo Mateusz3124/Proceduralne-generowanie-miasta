@@ -6,11 +6,11 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static Control;
-using static createRegion;
+using static CreateRegion;
 using static UnityEngine.Rendering.DebugUI;
 using static UnityEngine.Rendering.HableCurve;
 
-public class createRegion
+public class CreateRegion
 {
     private int numberofCellsX = 10;
     private int numberofCellsZ = 10;
@@ -22,8 +22,8 @@ public class createRegion
         noroads,
         outskirts,
         lowBuildings,
-        hihgBuildings,
-        skyscraper
+        highBuildings,
+        skyscrapers
     }
 
     private class VoronoiPoint
@@ -87,7 +87,7 @@ public class createRegion
 
     private bool checkForDenseRoads(int x, int z)
     {
-        if (points[x, z].regionType == RegionType.skyscraper || points[x, z].regionType == RegionType.hihgBuildings)
+        if (points[x, z].regionType == RegionType.skyscrapers || points[x, z].regionType == RegionType.highBuildings)
         {
             return true;
         }
@@ -160,7 +160,7 @@ public class createRegion
                 }
                 else
                 {
-                    points[x, z].regionType = RegionType.hihgBuildings;
+                    points[x, z].regionType = RegionType.highBuildings;
                 }
             }
         }
@@ -170,10 +170,12 @@ public class createRegion
             {
                 if (checkIfSkycraper(x,z))
                 {
-                    points[x, z].regionType = RegionType.skyscraper;
+                    points[x, z].regionType = RegionType.skyscrapers;
                 }
             }
         }
+
+        return;
 
         float sizeCube = proceduralTerrain.borderX / 250;
 
@@ -199,10 +201,10 @@ public class createRegion
                     case RegionType.lowBuildings:
                         cuber.GetComponent<Renderer>().material.color = new Color(255, 136, 0);
                         break;
-                    case RegionType.hihgBuildings:
+                    case RegionType.highBuildings:
                         cuber.GetComponent<Renderer>().material.color = new Color(255, 0, 0);
                         break;
-                    case RegionType.skyscraper:
+                    case RegionType.skyscrapers:
                         cuber.GetComponent<Renderer>().material.color = new Color(255, 0, 255);
                         break;
                     default:

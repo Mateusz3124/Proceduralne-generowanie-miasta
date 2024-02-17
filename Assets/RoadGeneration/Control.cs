@@ -13,6 +13,7 @@ public class Control : MonoBehaviour
     // Start is called before the first frame update
     private ProceduralTerrain proceduralTerrain;
     public SplineMesh sm;
+    private Texture2D texture_regions;
 
     void Start()
     {
@@ -30,9 +31,24 @@ public class Control : MonoBehaviour
         splines.createSplines(proceduralTerrain, segmentList);
         sm.CreateMesh(GetComponent<SplineContainer>(), transform);
 
-        createRegion regions = new createRegion();
+        CreateRegion regions = new CreateRegion();
         regions.createRegions(proceduralTerrain, segmentList);
+        const float num_regions = 5.0f;
 
+
+        var step = 100;
+        var width = proceduralTerrain.borderX / step;
+        var height = proceduralTerrain.borderZ / step;
+        texture_regions = new Texture2D(width, height, TextureFormat.RGBA32, false, false);
+        for(var i=0; i<proceduralTerrain.borderX; i+=step) {
+            for(var j=0; j<proceduralTerrain.borderZ; j+=step) {
+                var a = (float)regions.getRegion(i, j) / num_regions;
+                Color color = new Color(a, 0.0f, 0.0f, 1.0f);
+                texture_regions.SetPixel(i/step, j/step, color);
+            }
+        }
+        texture_regions.Apply(false, true);
+        proceduralTerrain.terrainMaterial.SetTexture("_regions", texture_regions); 
         //river_Control river = GetComponent<river_Control>();
         //river._proceduralTerrain = proceduralTerrain;
         //river.riverToTerrain(river.createRiver());

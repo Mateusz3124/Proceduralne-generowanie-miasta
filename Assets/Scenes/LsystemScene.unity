@@ -307,14 +307,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   width: 513
   height: 513
-  depth: 20
+  depth: 60
   scale: 1.5
-  offsetX: 100
-  offsetY: 100
+  offsetX: 0
+  offsetY: 0
   terrain: {fileID: 0}
   resolution: 513
-  numberOfTilesX: 20
-  numberOfTilesZ: 20
+  numberOfTilesX: 6
+  numberOfTilesZ: 6
+  terrainMaterial: {fileID: -876546973899608171, guid: 5255ea06bb497724f85ee26af51ef16d, type: 3}
   borderX: 0
   borderZ: 0
   center: {x: 0, y: 0}
@@ -623,7 +624,7 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.3
-  far clip plane: 1000
+  far clip plane: 5000
   field of view: 60
   orthographic: 0
   orthographic size: 5
@@ -650,13 +651,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1902108075}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.3334999, y: 0.52676046, z: -0.3452977, w: 0.7014775}
-  m_LocalPosition: {x: 0, y: 10, z: 0}
+  m_LocalRotation: {x: 0.11290377, y: 0.22090313, z: -0.025754742, w: 0.96839625}
+  m_LocalPosition: {x: 739, y: 1632, z: -1315}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 56.27, y: 66.367, z: -13.868}
+  m_LocalEulerAnglesHint: {x: 13.3, y: 25.7, z: 0}
 --- !u!114 &1902108079
 MonoBehaviour:
   m_ObjectHideFlags: 0
