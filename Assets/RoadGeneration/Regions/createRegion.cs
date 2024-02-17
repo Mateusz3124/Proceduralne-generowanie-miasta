@@ -74,7 +74,13 @@ public class CreateRegion
                 {
                     continue;
                 }
-                float distance = Vector2.Distance(position, points[currentX,currentZ].position);
+                float xDiff = position.x - points[currentX, currentZ].position.x;
+                float yDiff = position.y - points[currentX, currentZ].position.y;
+
+                float xDiffSquared = xDiff * xDiff;
+                float yDiffSquared = yDiff * yDiff;
+
+                float distance = xDiffSquared + yDiffSquared;
                 if (distance < minimalDistance)
                 {
                     minimalDistance = distance;
