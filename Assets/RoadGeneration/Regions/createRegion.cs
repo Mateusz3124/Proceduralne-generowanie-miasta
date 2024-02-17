@@ -182,7 +182,7 @@ public class CreateRegion
         }
 
         return;
-
+        /*
         float sizeCube = proceduralTerrain.borderX / 250;
 
         for (int x = 0; x < 250; x++)
@@ -219,5 +219,6 @@ public class CreateRegion
                 }
             }
         }
+        */
     }
 }

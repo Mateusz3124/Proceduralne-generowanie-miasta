@@ -313,8 +313,8 @@ MonoBehaviour:
   offsetY: 0
   terrain: {fileID: 0}
   resolution: 513
-  numberOfTilesX: 6
-  numberOfTilesZ: 6
+  numberOfTilesX: 20
+  numberOfTilesZ: 20
   terrainMaterial: {fileID: -876546973899608171, guid: 5255ea06bb497724f85ee26af51ef16d, type: 3}
   borderX: 0
   borderZ: 0
