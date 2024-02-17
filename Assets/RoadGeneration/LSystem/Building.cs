@@ -4,17 +4,23 @@ using UnityEngine;
 
 public class Building
 {
-    private Vector2 center;
-    private float direction;
-    // private List<Vector2> corners = new List<Vector2>();
+    public Vector2 center;
+    public float direction;
+    public float height;
+    public float width;
+    // half of diagonal length
+    public float circleColliderRadius {get;}
 
-    public Building(Vector2 center, float direction) {
+    public Building(Vector2 center, float height, float width, float direction) {
         this.center = center;
+        this.height = height;
+        this.width = width;
         this.direction = direction;
+
+        this.circleColliderRadius = new Vector2(width/2, height/2).magnitude;
     }
 
     public void MakeCollider() {
-        // this.GenerateCorners();
         PhysicObjects.buildingsColliders.Add(this);
     }
 
@@ -26,8 +32,4 @@ public class Building
         DestroyCollider();
         MakeCollider();
     }
-
-    // public void GenerateCorners()
-    // {
-    // }
 }

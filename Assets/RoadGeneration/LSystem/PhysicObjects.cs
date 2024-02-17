@@ -38,7 +38,33 @@ public class PhysicObjects
     }
 
     public static bool CheckBuildingCollision(Building building, Vector2 circleCenter, float radius) {
-        /////////////////////
+        Vector2 localCircleCenter = Quaternion.Euler(0, 0, -building.direction) * (circleCenter - building.center);
+
+        Vector2[] rectangleVertices = new Vector2[4];
+        float halfWidth = building.width * 0.5f;
+        float halfHeight = building.height * 0.5f;
+        rectangleVertices[0] = new Vector2(-halfWidth, -halfHeight);
+        rectangleVertices[1] = new Vector2(halfWidth, -halfHeight);
+        rectangleVertices[2] = new Vector2(halfWidth, halfHeight);
+        rectangleVertices[3] = new Vector2(-halfWidth, halfHeight);
+
+        for (int i = 0; i < 4; i++)
+        {
+            rectangleVertices[i] = Quaternion.Euler(0, 0, building.direction) * rectangleVertices[i];
+        }
+
+        for (int i = 0; i < 4; i++)
+        {
+            Vector2 sideStart = rectangleVertices[i];
+            Vector2 sideEnd = rectangleVertices[(i + 1) % 4];
+
+            Vector2 closestPoint = GetClosestPointOnSegment(localCircleCenter, sideStart, sideEnd);
+            if ((closestPoint - localCircleCenter).sqrMagnitude <= radius * radius)
+            {
+                return true;
+            }
+        }
+
         return false;
     }
 

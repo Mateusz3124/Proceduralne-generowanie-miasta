@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class RoadGen : MonoBehaviour
@@ -26,8 +25,8 @@ public class RoadGen : MonoBehaviour
 
     // borders to lsystem
     // has default values but its better to set manually
-    public Vector2 minCorner {get; set;} = new Vector2(0f, 0f);
-    public Vector2 maxCorner {get; set;} = new Vector2(512f, 512f);
+    public static Vector2 minCorner {get; set;} = new Vector2(0f, 0f);
+    public static Vector2 maxCorner {get; set;} = new Vector2(512f, 512f);
 
 
     void Start() 
@@ -276,10 +275,15 @@ public class RoadGen : MonoBehaviour
         );
     }
 
-    private float SamplePopulation(Vector2 start, Vector2 end)
+    public static float SamplePopulation(Vector2 start, Vector2 end)
     {
-        float s_start = (Mathf.PerlinNoise(start.x, start.y) + 1.0f) / 2f;
-        float s_end = (Mathf.PerlinNoise(end.x, end.y) + 1.0f) / 2f;
+        float s_start = (Mathf.PerlinNoise(start.x / maxCorner.x, start.y / maxCorner.y) + 1) / 2;
+        float s_end = (Mathf.PerlinNoise(end.x / maxCorner.x, end.y / maxCorner.y) + 1) / 2;
         return (s_start + s_end) / 2f;
+    }
+
+    // point.x, point.y - <0,1>
+    public static float SampleNoise(Vector2 point) {
+        return Mathf.PerlinNoise(point.x / maxCorner.x, point.y / maxCorner.y);
     }
 }

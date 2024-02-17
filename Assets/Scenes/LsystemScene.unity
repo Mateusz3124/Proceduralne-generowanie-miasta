@@ -275,7 +275,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c0e32f364d27bf44595ec68cd1f8f1a1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  segment_count_limit: 500
+  segment_count_limit: 1000
 --- !u!4 &1789418046
 Transform:
   m_ObjectHideFlags: 0
@@ -370,6 +370,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   road_width: 5
+  road_height: 0.5
   road_segments: 10
   material: {fileID: 2100000, guid: dcd18e700ded0614583af7b14f395377, type: 2}
 --- !u!114 &1789418054
@@ -384,6 +385,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 532488d41b3ab964ba276e1b1a5b0c37, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  heightOffset: 0.3
 --- !u!1 &1902108075
 GameObject:
   m_ObjectHideFlags: 0
@@ -470,8 +472,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1902108075}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.3334999, y: 0.52676046, z: -0.3452977, w: 0.7014775}
-  m_LocalPosition: {x: 2586, y: 913, z: 1767}
+  m_LocalRotation: {x: -0.4177924, y: -0.4875682, z: 0.28432027, w: -0.7119612}
+  m_LocalPosition: {x: 3803.1433, y: 4460.752, z: 3931.3042}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
