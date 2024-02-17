@@ -19,10 +19,10 @@ public class splineCreation : MonoBehaviour
     void Update()
     {
     }
-    public void createSplines(ProceduralTerrain proceduralTerrain, RoadGen roadGen)
+    public void createSplines(ProceduralTerrain proceduralTerrain, List<Segment> segmentList)
     {
         SplineContainer splineContainer = GetComponent<SplineContainer>();
-        foreach (Segment s in roadGen.GenerateSegments(proceduralTerrain.center))
+        foreach (Segment s in segmentList)
         {
             createSpline(s, proceduralTerrain, splineContainer);
         }
@@ -32,12 +32,15 @@ public class splineCreation : MonoBehaviour
     {
         Vector2 direction = segment.end - segment.start;
         float length = direction.magnitude;
-
+        if(length < 1f)
+        {
+            return;
+        }
         List<float3> list = new List<float3>();
 
         float3 positionFirst = new float3(segment.start.x, proceduralTerrain.getHeight(segment.start.x, segment.start.y) + heightOffset, segment.start.y);
         list.Add(positionFirst);
-        //how far away are knots
+        //how far away are knots from each other
         float knotOffset = 40;
 
         if (length > knotOffset)
@@ -45,7 +48,7 @@ public class splineCreation : MonoBehaviour
             float lengthFraction = knotOffset / length;
             int counter = 1;
 
-            while(lengthFraction * counter<1)
+            while(lengthFraction * counter< 0.90)
             {
                 Vector2 pointToAdd = segment.start + ((segment.end - segment.start) * lengthFraction * counter);
                 counter++;

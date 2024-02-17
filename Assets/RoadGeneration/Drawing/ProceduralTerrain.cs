@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 using Unity.Mathematics;
+using UnityEditor;
 
 public class ProceduralTerrain : MonoBehaviour
 {
@@ -33,8 +34,8 @@ public class ProceduralTerrain : MonoBehaviour
     public int borderZ;
     [HideInInspector]
     public Vector2 center;
-
-    private GameObject[,] terrains;
+    [HideInInspector]
+    public GameObject[,] terrains;
     private void setHeights()
     {
         heightsMapLocal = new float[resolution * numberOfTilesZ, resolution * numberOfTilesX];
@@ -86,13 +87,7 @@ public class ProceduralTerrain : MonoBehaviour
         int tileX = (int)Math.Floor(x / width);
         int tileZ = (int)Math.Floor(z / height);
         GameObject temp;
-        try
-        {
-            temp = terrains[tileX, tileZ];
-        } catch (Exception)
-        {
-            return 0f;
-        }
+        temp = terrains[tileX, tileZ];
         Terrain terrain = temp.GetComponent<Terrain>();
         Vector3 position = new Vector3(x, 0, z);
         float resultHeight = terrain.SampleHeight(position);
