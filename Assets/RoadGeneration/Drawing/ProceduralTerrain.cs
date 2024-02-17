@@ -24,6 +24,7 @@ public class ProceduralTerrain : MonoBehaviour
 
     public int numberOfTilesX = 2;
     public int numberOfTilesZ = 2;
+    public Material terrainMaterial;
 
     private float[,] heightsMapLocal;
     [HideInInspector]
@@ -60,6 +61,8 @@ public class ProceduralTerrain : MonoBehaviour
                 TerrainData terrainData = new TerrainData();
                 terrainData = GenerateTerrain(terrainData, x* (resolution-1), z* (resolution-1));
                 GameObject terrainObject = Terrain.CreateTerrainGameObject(terrainData);
+                terrainMaterial.SetFloat("_terrain_size", width);
+                terrainObject.GetComponent<Terrain>().materialTemplate = terrainMaterial;
                 terrainObject.transform.position = new Vector3Int(x*width, 0, z*height);
                 terrains[x, z] = terrainObject;
             }

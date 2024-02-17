@@ -303,16 +303,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3da4316a8ef1cb4498d542f5d93da0af, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 4097
-  height: 4097
-  depth: 100
-  scale: 5
-  offsetX: 100
-  offsetY: 100
+  width: 256
+  height: 256
+  depth: 15
+  scale: 2
+  offsetX: 0
+  offsetY: 0
   terrain: {fileID: 0}
-  resolution: 4097
-  numberOfTilesX: 2
-  numberOfTilesZ: 2
+  resolution: 513
+  numberOfTilesX: 1
+  numberOfTilesZ: 1
+  terrainMaterial: {fileID: 2100000, guid: 9a5189412171b4e46bc6e961a9691221, type: 2}
   borderX: 0
   borderZ: 0
   center: {x: 0, y: 0}
@@ -370,6 +371,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   road_width: 5
+  road_height: 0.5
   road_segments: 10
   material: {fileID: 2100000, guid: dcd18e700ded0614583af7b14f395377, type: 2}
 --- !u!114 &1789418054
@@ -384,6 +386,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 532488d41b3ab964ba276e1b1a5b0c37, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  heightOffset: 0.3
 --- !u!1 &1902108075
 GameObject:
   m_ObjectHideFlags: 0
@@ -471,7 +474,7 @@ Transform:
   m_GameObject: {fileID: 1902108075}
   serializedVersion: 2
   m_LocalRotation: {x: 0.3334999, y: 0.52676046, z: -0.3452977, w: 0.7014775}
-  m_LocalPosition: {x: 2586, y: 913, z: 1767}
+  m_LocalPosition: {x: 0, y: 10, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
