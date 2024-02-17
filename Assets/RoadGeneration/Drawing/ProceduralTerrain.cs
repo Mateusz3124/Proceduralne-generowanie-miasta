@@ -26,8 +26,6 @@ public class ProceduralTerrain : MonoBehaviour
     public int numberOfTilesX = 2;
     public int numberOfTilesZ = 2;
 
-    public GameObject prefab;
-
     private float[,] heightsMapLocal;
     [HideInInspector]
     public int borderX;

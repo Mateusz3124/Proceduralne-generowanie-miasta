@@ -6,9 +6,11 @@ Assets <br/>
 │   ├───River <br/>
 │   ├───Old_scenes <br/>
 │   └───Voronoi <br/>
+├───river (obecne skrypty z rzeką) <br/>
 ├───RoadGeneration (glowny folder) <br/>
 │   ├───Drawing (rysowanie na scenie, spline'y i ich generacja) <br/>
 │   ├───LSystem (l-system) <br/>
+│   ├───Regions (generowane stref w mieście) <br/>
 │   └───Materials (materialy z podzialem na kategorie) <br/>
 │       └───RoadMaterials <br/>
 │ <br/>

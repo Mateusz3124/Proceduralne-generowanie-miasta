@@ -315,7 +315,6 @@ MonoBehaviour:
   resolution: 513
   numberOfTilesX: 20
   numberOfTilesZ: 20
-  prefab: {fileID: 1507636620937791836, guid: 7097ba7ba649e1f41bba232312bdcbd8, type: 3}
   borderX: 0
   borderZ: 0
   center: {x: 0, y: 0}

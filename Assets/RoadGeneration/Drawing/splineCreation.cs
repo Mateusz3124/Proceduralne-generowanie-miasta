@@ -19,10 +19,10 @@ public class splineCreation : MonoBehaviour
     void Update()
     {
     }
-    public void createSplines(ProceduralTerrain proceduralTerrain, List<Segment> list)
+    public void createSplines(ProceduralTerrain proceduralTerrain, List<Segment> segmentList)
     {
         SplineContainer splineContainer = GetComponent<SplineContainer>();
-        foreach (Segment s in list)
+        foreach (Segment s in segmentList)
         {
             createSpline(s, proceduralTerrain, splineContainer);
         }
@@ -40,7 +40,7 @@ public class splineCreation : MonoBehaviour
 
         float3 positionFirst = new float3(segment.start.x, proceduralTerrain.getHeight(segment.start.x, segment.start.y) + heightOffset, segment.start.y);
         list.Add(positionFirst);
-        //how far away are knots
+        //how far away are knots from each other
         float knotOffset = 40;
 
         if (length > knotOffset)
