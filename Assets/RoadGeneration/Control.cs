@@ -22,6 +22,8 @@ public class Control : MonoBehaviour
         sm.CreateMesh(GetComponent<SplineContainer>(), transform);
 
         BuildingGen buildingGen = new BuildingGen();
+        BuildingGen.minCorner = new Vector2(0f, 0f);
+        BuildingGen.maxCorner = new Vector2(proceduralTerrain.borderX, proceduralTerrain.borderZ);
         buildingGen.makeBuildingsOnScene();
     }
 

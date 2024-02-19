@@ -11,6 +11,9 @@ public class BuildingGen
     const float DEFAULT_BUILDING_HEIGHT = 70f;
     const float DEFAULT_BUILDING_WIDTH = 70f;
 
+    public static Vector2 minCorner {get; set;} = new Vector2(0f, 0f);
+    public static Vector2 maxCorner {get; set;} = new Vector2(512f, 512f);
+
     // only for visualisation and testing
     // else dont use
     public void makeBuildingsOnScene() { 
@@ -74,8 +77,8 @@ public class BuildingGen
                         break;
                     }
                 }
-
-                if(allowBuilding) {
+                
+                if(allowBuilding && buildingWithinLimits(building)) {
                     building.MakeCollider();
                     buildings.Add(building);
                 }
@@ -83,5 +86,14 @@ public class BuildingGen
         }
 
         return buildings;
+    }
+
+    private bool buildingWithinLimits(Building building) {
+        if(building.center.x > minCorner.x && building.center.x < maxCorner.x &&
+            building.center.y > minCorner.y && building.center.y < maxCorner.y) {
+            return true;
+        }
+
+        return false;        
     }
 }
