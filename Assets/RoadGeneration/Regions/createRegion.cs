@@ -16,6 +16,7 @@ public class CreateRegion
     private int numberofCellsZ = 10;
 
     private VoronoiPoint[,] points;
+    private List<VoronoiPoint> addedPoints = new List<VoronoiPoint>();
 
     public enum RegionType
     {
@@ -56,6 +57,18 @@ public class CreateRegion
         return findClosestVoronoiPoint(position).regionType;
     }
 
+    public float findDistance(Vector2 position1, Vector2 position2)
+    {
+        float xDiff = position1.x - position2.x;
+        float yDiff = position1.y - position2.y;
+
+        float xDiffSquared = xDiff * xDiff;
+        float yDiffSquared = yDiff * yDiff;
+
+        float distance = xDiffSquared + yDiffSquared;
+        return distance;
+    }
+
     private VoronoiPoint findClosestVoronoiPoint(Vector2 position)
     {
         int tileX = (int)Mathf.Floor(position.x / cellSizeX);
@@ -63,6 +76,19 @@ public class CreateRegion
 
         float minimalDistance = float.MaxValue;
         VoronoiPoint result = null;
+
+        if(addedPoints.Count > 0)
+        {
+            foreach(VoronoiPoint point in addedPoints)
+            {
+                float distance = findDistance(position, point.position);
+                if (distance < minimalDistance)
+                {
+                    minimalDistance = distance;
+                    result = point;
+                }
+            }
+        }
 
         for (int neighbourX = -1; neighbourX < 2; neighbourX++)
         {
@@ -74,13 +100,7 @@ public class CreateRegion
                 {
                     continue;
                 }
-                float xDiff = position.x - points[currentX, currentZ].position.x;
-                float yDiff = position.y - points[currentX, currentZ].position.y;
-
-                float xDiffSquared = xDiff * xDiff;
-                float yDiffSquared = yDiff * yDiff;
-
-                float distance = xDiffSquared + yDiffSquared;
+                float distance = findDistance(position, points[currentX, currentZ].position);
                 if (distance < minimalDistance)
                 {
                     minimalDistance = distance;
@@ -102,8 +122,8 @@ public class CreateRegion
 
     private bool checkIfSkycraper(int x, int z)
     {
-        int count = 0;
-
+        int countWrong = 0;
+        int2 offset = new int2(-1,-1);
         for (int neighbourX = -1; neighbourX < 2; neighbourX++)
         {
             for (int neighbourZ = -1; neighbourZ < 2; neighbourZ++)
@@ -112,19 +132,43 @@ public class CreateRegion
                 int currentZ = z + neighbourZ;
                 if (currentX < 0 || currentX >= numberofCellsX || currentZ < 0 || currentZ >= numberofCellsZ)
                 {
-                    count++;
+                    continue;
                 }
-                else if (checkForDenseRoads(currentX, currentZ))
+                if (!checkForDenseRoads(currentX, currentZ))
                 {
-                    count++;
+                    if (!(neighbourX == 0 && neighbourZ == 0))
+                    {
+                        countWrong++;
+                        offset.x = neighbourX;
+                        offset.y = neighbourZ;
+                    }
+                    else
+                    {
+                        return false;
+                    }
                 }
-                else
+                if (countWrong == 2)
                 {
                     return false;
                 }
             }
         }
-        return count == 9;
+        if(offset.x == -1)
+        {
+            return true;
+        }
+
+        Vector2 currentPosition = points[x,z].position;
+        Vector2 wrongPosition = points[x + offset.x, z + offset.y].position;
+        Vector2 position = (currentPosition + wrongPosition) / 2f;
+        if(Vector2.Distance(position, currentPosition) > 300f)
+        {
+            position = (currentPosition + position) / 2f;
+        }
+        VoronoiPoint voronoiPoint = new VoronoiPoint(position);
+        voronoiPoint.regionType = RegionType.highBuildings;
+        addedPoints.Add(voronoiPoint);
+        return true;
     }
     public void createRegions(ProceduralTerrain proceduralTerrain, List<Segment> segmentList)
     {
@@ -180,11 +224,9 @@ public class CreateRegion
                 }
             }
         }
-
-        return;
         /*
         float sizeCube = proceduralTerrain.borderX / 250;
-
+        OnDrawGizmosSelected();
         for (int x = 0; x < 250; x++)
         {
             for (int z = 0; z < 250; z++)
@@ -220,5 +262,33 @@ public class CreateRegion
             }
         }
         */
+        
     }
+
+    private void OnDrawGizmosSelected()
+    {
+
+        for (int x = 0; x < numberofCellsX; x++)
+        {
+            for (int z = 0; z < numberofCellsZ; z++)
+            {
+                VoronoiPoint voronoiPoint = points[x, z];
+                GameObject cuber = GameObject.CreatePrimitive(PrimitiveType.Cube);
+
+                cuber.transform.position = new Vector3(voronoiPoint.position.x, 102f, voronoiPoint.position.y);
+                cuber.transform.localScale = new Vector3(50f, 50f, 50f);
+                cuber.GetComponent<Renderer>().material.color = Color.gray;
+            }
+        }
+        foreach (VoronoiPoint voronoiPoint in addedPoints)
+        {
+            GameObject cuber = GameObject.CreatePrimitive(PrimitiveType.Cube);
+
+            cuber.transform.position = new Vector3(voronoiPoint.position.x, 102f, voronoiPoint.position.y);
+            cuber.transform.localScale = new Vector3(50f, 50f, 50f);
+            cuber.GetComponent<Renderer>().material.color = Color.white;
+        }
+
+    }
+
 }

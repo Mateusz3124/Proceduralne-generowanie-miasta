@@ -277,7 +277,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c0e32f364d27bf44595ec68cd1f8f1a1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  segment_count_limit: 700
+  segment_count_limit: 600
 --- !u!4 &1789418046
 Transform:
   m_ObjectHideFlags: 0
