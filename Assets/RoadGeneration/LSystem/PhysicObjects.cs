@@ -32,7 +32,7 @@ public class PhysicObjects
 
     public static bool CheckSegmentCollision(Segment segment, Vector2 circleCenter, float radius)
     {
-        Vector2 closestPoint = GetClosestPointOnSegment(segment.start, segment.end, circleCenter);
+        Vector2 closestPoint = GetClosestPointOnSegment(circleCenter, segment.start, segment.end);
 
         return Vector2.Distance(closestPoint, circleCenter) < radius;
     }

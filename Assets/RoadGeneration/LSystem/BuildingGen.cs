@@ -5,9 +5,11 @@ using UnityEngine;
 
 public class BuildingGen
 {
-    const int BUILDING_SEGMENT_PERIOD = 3;
-    const int BUILDINGS_PER_SEGMENT = 7;
-    const float MAX_BUILDING_DISTANCE_FROM_SEGMENT = 30.0f;
+    const int BUILDING_SEGMENT_PERIOD = 2;
+    const int BUILDINGS_PER_SEGMENT = 5;
+    const float MAX_BUILDING_DISTANCE_FROM_SEGMENT = 200.0f;
+    const float DISTANCE_TO_MOVE_IN_PLACING_ATTEMPT = 30f;
+    const float MAX_PLACEMENT_ATTEMPTS = 20;
     const float DEFAULT_BUILDING_HEIGHT = 70f;
     const float DEFAULT_BUILDING_WIDTH = 70f;
 
@@ -49,17 +51,16 @@ public class BuildingGen
                 center.y += randomDistance * Mathf.Cos(Mathf.Deg2Rad * randomAngle);
                 Building building = new Building(center, randomHeight, randomWidth, segment.direction);
 
-                int maxPlacementAttempts = 5;
                 bool allowBuilding = false;
-                for (int placementAttempt = 0; placementAttempt < maxPlacementAttempts; placementAttempt++)
+                for (int placementAttempt = 0; placementAttempt < MAX_PLACEMENT_ATTEMPTS; placementAttempt++)
                 {
                     // check if building collides with any segment
                     List<Segment> matchesSeg = PhysicObjects.OverlapCircleSegments(building.center, building.circleColliderRadius);
                     if(matchesSeg.Count != 0) {
                         // move center away from collision
                         foreach(var s in matchesSeg) {
-                            building.center += building.center - PhysicObjects.GetClosestPointOnSegment(
-                                building.center, s.start, s.end);
+                            building.center += (building.center - PhysicObjects.GetClosestPointOnSegment(
+                                building.center, s.start, s.end)).normalized * DISTANCE_TO_MOVE_IN_PLACING_ATTEMPT;
                         }
                         continue;
                     }

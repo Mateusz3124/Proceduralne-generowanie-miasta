@@ -27,4 +27,16 @@ public class Control : MonoBehaviour
         buildingGen.makeBuildingsOnScene();
     }
 
+    void Update() {
+        if(Input.GetKeyDown(KeyCode.B)) {
+            Debug.Log("Break");
+        }
+        if(Input.GetKeyDown(KeyCode.C)) {
+            foreach(var b in PhysicObjects.buildingsColliders) {
+                if(PhysicObjects.OverlapCircleBuildings(b.center, b.circleColliderRadius).Count > 0) {
+                    Debug.Log($"Collision:\n\tcenter - {b.center}");
+                }
+            }
+        }
+    }
 }
