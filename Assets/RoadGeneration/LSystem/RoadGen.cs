@@ -7,16 +7,19 @@ using UnityEngine;
 public class RoadGen : MonoBehaviour
 {
     public int segment_count_limit = 2000;
+    public float scale = 2.7f;
 
     const float BRANCH_ANGLE_DEVIATION = 3.0f; // degrees
     const float STRAIGHT_ANGLE_DEVIATION = 15.0f; // degrees
+    // find point with highest noise value in <-30, 30> degrees angle range
+    const float HIGHWAY_ANGLE_SEARCH_RANGE = 15.0f; // degrees
     const int HIGHWAY_SEGMENT_LENGTH = 400;
     const float DEFAULT_BRANCH_PROBABILITY = 0.4f;
     const float HIGHWAY_BRANCH_PROBABILITY = 0.05f;
     // Branches are made based on perlin noise
     // Higher noise value, more roads are there
     const float NORMAL_BRANCH_POPULATION_THRESHOLD = 0.5f;
-    const float HIGHWAY_BRANCH_POPULATION_THRESHOLD = 0.5f;
+    const float HIGHWAY_BRANCH_POPULATION_THRESHOLD = 0.1f;
     // Snap action reach
     const int MAX_SNAP_DISTANCE = 50;
     const float SEGMENT_COLLIDER_WIDTH = 10.0f;
@@ -27,6 +30,9 @@ public class RoadGen : MonoBehaviour
     // has default values but its better to set manually
     public static Vector2 minCorner {get; set;} = new Vector2(0f, 0f);
     public static Vector2 maxCorner {get; set;} = new Vector2(512f, 512f);
+
+    public float randomPopOffsetX;
+    public float randomPopOffsetY;
 
 
     void Start() 
@@ -62,6 +68,9 @@ public class RoadGen : MonoBehaviour
 
     public List<Segment> GenerateSegments(Vector2 center) 
     {
+        randomPopOffsetX = UnityEngine.Random.Range(0f, 99999f);
+        randomPopOffsetY = UnityEngine.Random.Range(0f, 99999f);
+
         List<Segment> segments = new List<Segment>();
         PriorityQueue<Segment, int> priorityQueue = new PriorityQueue<Segment, int>();
         // Main segment and opposite direction segment
@@ -177,71 +186,59 @@ public class RoadGen : MonoBehaviour
     private List<Segment> GlobalGoalsGenerate(Segment previousSegment) {
         List<Segment> newBranches = new List<Segment>();
 
-        if (!previousSegment.metadata.severed)
+        if(previousSegment.metadata.severed)
+            return newBranches;
+
+        Segment continueStraight = SegmentContinue(previousSegment, previousSegment.direction);
+        float straightPop = SamplePopulation(continueStraight.start, continueStraight.end);
+
+        if (previousSegment.metadata.highway)
         {
-            Segment continueStraight = SegmentContinue(previousSegment, previousSegment.direction);
-            float straightPop = SamplePopulation(continueStraight.start, continueStraight.end);
+            Segment highestNoiseHighwayContinue = FindHighwayContinuation(previousSegment);
+            newBranches.Add(highestNoiseHighwayContinue);
+            float roadPop = SamplePopulation(highestNoiseHighwayContinue.start, highestNoiseHighwayContinue.end);
 
-            if (previousSegment.metadata.highway)
+            if (roadPop > HIGHWAY_BRANCH_POPULATION_THRESHOLD)
             {
-                float randomStraightAngle = RandomStraightContinueAngle();
-                Segment randomStraight = SegmentContinue(
-                    previousSegment, previousSegment.direction + randomStraightAngle
-                );
-                float randomPop = SamplePopulation(randomStraight.start, randomStraight.end);
-                float roadPop;
-                if (randomPop > straightPop)
+                if (UnityEngine.Random.Range(0f, 1f) < HIGHWAY_BRANCH_PROBABILITY)
                 {
-                    newBranches.Add(randomStraight);
-                    roadPop = randomPop;
-                }
-                else
-                {
-                    newBranches.Add(continueStraight);
-                    roadPop = straightPop;
-                }
-                if (roadPop > HIGHWAY_BRANCH_POPULATION_THRESHOLD)
-                {
-                    if (UnityEngine.Random.Range(0f, 1f) < HIGHWAY_BRANCH_PROBABILITY)
-                    {
-                        Segment leftHighwayBranch = SegmentContinue(
-                            previousSegment, previousSegment.direction - 90f + RandomBranchAngle()
-                        );
-                        newBranches.Add(leftHighwayBranch);
-                    }
-                    else if (UnityEngine.Random.Range(0f, 1f) < HIGHWAY_BRANCH_PROBABILITY)
-                    {
-                        Segment rightHighwayBranch = SegmentContinue(
-                            previousSegment, previousSegment.direction + 90f + RandomBranchAngle()
-                        );
-                        newBranches.Add(rightHighwayBranch);
-                    }
-                }
-
-            }
-            else if (straightPop > NORMAL_BRANCH_POPULATION_THRESHOLD)
-            {
-                newBranches.Add(continueStraight);
-            }
-
-            if (straightPop > NORMAL_BRANCH_POPULATION_THRESHOLD)
-            {
-                if (UnityEngine.Random.Range(0f, 1f) < DEFAULT_BRANCH_PROBABILITY)
-                {
-                    Segment leftBranch = SegmentBranch(
+                    Segment leftHighwayBranch = SegmentContinue(
                         previousSegment, previousSegment.direction - 90f + RandomBranchAngle()
                     );
-                    newBranches.Add(leftBranch);
+                    newBranches.Add(leftHighwayBranch);
                 }
-                else if (UnityEngine.Random.Range(0f, 1f) < DEFAULT_BRANCH_PROBABILITY)
+                else if (UnityEngine.Random.Range(0f, 1f) < HIGHWAY_BRANCH_PROBABILITY)
                 {
-                    Segment rightBranch = SegmentBranch(
+                    Segment rightHighwayBranch = SegmentContinue(
                         previousSegment, previousSegment.direction + 90f + RandomBranchAngle()
                     );
-                    newBranches.Add(rightBranch);
+                    newBranches.Add(rightHighwayBranch);
                 }
             }
-        } 
+
+        }
+        else if (straightPop > NORMAL_BRANCH_POPULATION_THRESHOLD)
+        {
+            newBranches.Add(continueStraight);
+        }
+
+        if (straightPop > NORMAL_BRANCH_POPULATION_THRESHOLD)
+        {
+            if (UnityEngine.Random.Range(0f, 1f) < DEFAULT_BRANCH_PROBABILITY)
+            {
+                Segment leftBranch = SegmentBranch(
+                    previousSegment, previousSegment.direction - 90f + RandomBranchAngle()
+                );
+                newBranches.Add(leftBranch);
+            }
+            else if (UnityEngine.Random.Range(0f, 1f) < DEFAULT_BRANCH_PROBABILITY)
+            {
+                Segment rightBranch = SegmentBranch(
+                    previousSegment, previousSegment.direction + 90f + RandomBranchAngle()
+                );
+                newBranches.Add(rightBranch);
+            }
+        }
 
         // filter branches that extend beyond the boundaries of the area
         var newBranchesFiltered = newBranches.Where(b => { 
@@ -275,15 +272,39 @@ public class RoadGen : MonoBehaviour
         );
     }
 
-    public static float SamplePopulation(Vector2 start, Vector2 end)
+    private Segment FindHighwayContinuation(Segment previousSegment) {
+        int pointsToSearch = 5;
+        float range = HIGHWAY_ANGLE_SEARCH_RANGE * 2;
+        float step = range / (pointsToSearch - 1);
+        float startDirection = previousSegment.direction + HIGHWAY_ANGLE_SEARCH_RANGE;
+        
+        float maxNoise = 0f;
+        Vector2? highestNoise = null;
+
+        for(int i = 0; i < pointsToSearch; i++) {
+            float direction = startDirection - i * step;
+            Vector2 p = new Vector2(
+                previousSegment.end.x + previousSegment.length * Mathf.Sin(Mathf.Deg2Rad * direction),
+                previousSegment.end.y + previousSegment.length * Mathf.Cos(Mathf.Deg2Rad * direction)
+            );
+
+            if(SampleNoise(p) > maxNoise) {
+                highestNoise = p;
+                maxNoise = SampleNoise(p);
+            }
+        }
+
+        return new Segment(previousSegment.end, (Vector2)highestNoise, 0, previousSegment.metadata);
+    }
+
+    public float SamplePopulation(Vector2 start, Vector2 end)
     {
-        float s_start = (Mathf.PerlinNoise(start.x / maxCorner.x, start.y / maxCorner.y) + 1) / 2;
-        float s_end = (Mathf.PerlinNoise(end.x / maxCorner.x, end.y / maxCorner.y) + 1) / 2;
+        float s_start = Mathf.PerlinNoise(start.x / maxCorner.x * scale + randomPopOffsetX, start.y / maxCorner.y * scale + randomPopOffsetY);
+        float s_end = Mathf.PerlinNoise(end.x / maxCorner.x * scale + randomPopOffsetX, end.y / maxCorner.y * scale + randomPopOffsetY);
         return (s_start + s_end) / 2f;
     }
 
-    // point.x, point.y - <0,1>
-    public static float SampleNoise(Vector2 point) {
-        return Mathf.PerlinNoise(point.x / maxCorner.x, point.y / maxCorner.y);
+    public float SampleNoise(Vector2 point) {
+        return Mathf.PerlinNoise(point.x / maxCorner.x * scale + randomPopOffsetX, point.y / maxCorner.y * scale + randomPopOffsetY);
     }
 }
