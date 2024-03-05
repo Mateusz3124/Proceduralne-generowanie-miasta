@@ -14,7 +14,7 @@ public class RoadGen : MonoBehaviour
     // find point with highest noise value in <-30, 30> degrees angle range
     const float HIGHWAY_ANGLE_SEARCH_RANGE = 15.0f; // degrees
     const int HIGHWAY_SEGMENT_LENGTH = 400;
-    const float DEFAULT_BRANCH_PROBABILITY = 0.4f;
+    const float DEFAULT_BRANCH_PROBABILITY = 0.7f;
     const float HIGHWAY_BRANCH_PROBABILITY = 0.05f;
     // Branches are made based on perlin noise
     // Higher noise value, more roads are there
@@ -31,8 +31,8 @@ public class RoadGen : MonoBehaviour
     public static Vector2 minCorner {get; set;} = new Vector2(0f, 0f);
     public static Vector2 maxCorner {get; set;} = new Vector2(512f, 512f);
 
-    public float randomPopOffsetX;
-    public float randomPopOffsetY;
+    private float randomPopOffsetX;
+    private float randomPopOffsetY;
 
 
     void Start() 
@@ -240,20 +240,33 @@ public class RoadGen : MonoBehaviour
             }
         }
 
-        // filter branches that extend beyond the boundaries of the area
-        var newBranchesFiltered = newBranches.Where(b => { 
-            return b.start.x >= minCorner.x && b.start.x < maxCorner.x &&
-                    b.start.y >= minCorner.y && b.start.y < maxCorner.y &&
-                b.end.x >= minCorner.x && b.end.x < maxCorner.x &&
-                    b.end.y >= minCorner.y && b.end.y < maxCorner.y;
-        });
+        // make branches not extend beyond area
+        foreach(var b in newBranches) {
+            if(b.start.x < minCorner.x)
+                b.start = new Vector2(minCorner.x, b.start.y);
+            if(b.start.x > maxCorner.x)
+                b.start = new Vector2(maxCorner.x, b.start.y);
+            if(b.start.y < minCorner.y)
+                b.start = new Vector2(b.start.x, minCorner.y);
+            if(b.start.y > maxCorner.y)
+                b.start = new Vector2(b.start.x, maxCorner.y);
+
+            if(b.end.x < minCorner.x)
+                b.end = new Vector2(minCorner.x, b.end.y);
+            if(b.end.x > maxCorner.x)
+                b.end = new Vector2(maxCorner.x, b.end.y);
+            if(b.end.y < minCorner.y)
+                b.end = new Vector2(b.end.x, minCorner.y);
+            if(b.end.y > maxCorner.y)
+                b.end = new Vector2(b.end.x, maxCorner.y);
+        }
         
-        foreach (var branch in newBranchesFiltered)
+        foreach (var branch in newBranches)
         {
             branch.previousSegmentToLink = previousSegment;
         }
 
-        return newBranchesFiltered.ToList();
+        return newBranches.ToList();
     }
 
     private Segment SegmentContinue(Segment previousSegment, float direction) {
