@@ -1,13 +1,50 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Unity.Mathematics;
 using UnityEditor.SearchService;
+using UnityEngine.Splines;
 using UnityEngine;
+using static UnityEngine.Rendering.HableCurve;
 
 
 public interface Actions
 {
     public bool MakeAction(Segment segment, List<Segment> segments);
+}
+
+public class LocalConstraintsRiver
+{
+    private bool actionWhenRoadCrossesRiver(float3 point, Segment segment)
+    {
+        float differenceStartX = point.x - segment.start.x;
+        float differenceEndX = point.x - segment.end.x;
+        if(differenceEndX * differenceStartX < 0)
+        {
+            return !segment.metadata.highway;
+        }
+        float differenceStartZ = point.z - segment.start.y;
+        float differenceEndZ = point.z - segment.end.y;
+        if (differenceEndZ * differenceStartZ < 0)
+        {
+            return !segment.metadata.highway;
+        }
+        return false;
+    }
+    public bool MakeAction(Segment segment, Spline river, int riverWidth)
+    {
+        Vector3 rayOrigin = new float3(segment.end.x, -1f, segment.end.y);
+        Ray ray = new Ray(rayOrigin, Vector3.up);
+        float3 pointOnSpline;
+        float interpolation;
+        float distance = SplineUtility.GetNearestPoint<Spline>(river, ray, out pointOnSpline, out interpolation, SplineUtility.PickResolutionMin);
+        if (distance < riverWidth * 1.6)
+        {
+            return true;
+        }
+        bool test = actionWhenRoadCrossesRiver(pointOnSpline, segment);
+        return test;
+    }
 }
 
 public class LocalConstraintsIntersectionAction : Actions {

@@ -182,7 +182,7 @@ public class flatten_for_river : MonoBehaviour
     }
 
     //main function of flattening the terriang base on detecting mesh using raycast
-    public void changeTerrain(GameObject objectTerrain, List<int2> list)
+    public void changeTerrain(GameObject objectTerrain, List<Point> list)
     {
         TerrainData terData = objectTerrain.GetComponent<Terrain>().terrainData;
         int Tw = terData.heightmapResolution;
@@ -193,9 +193,10 @@ public class flatten_for_river : MonoBehaviour
         // for blending heightMapCreated with the heightMapOriginal to form
         var heightAlpha = new float[heightMapOriginal.GetLength(0), heightMapOriginal.GetLength(1)];
 
-        foreach(int2 elem in list)
+        foreach(Point point in list)
         {
-            heightMapCreated[elem.y, elem.x] = 0.0f;
+            int2 elem = point.position;
+            heightMapCreated[elem.y, elem.x] = point.height;
             heightAlpha[elem.y, elem.x] = 1.0f;
         }
 

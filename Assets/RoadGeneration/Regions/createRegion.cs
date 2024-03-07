@@ -12,8 +12,8 @@ using static UnityEngine.Rendering.HableCurve;
 
 public class CreateRegion
 {
-    private int numberofCellsX = 10;
-    private int numberofCellsZ = 10;
+    private int numberofCellsX;
+    private int numberofCellsZ;
 
     private VoronoiPoint[,] points;
     private List<VoronoiPoint> addedPoints = new List<VoronoiPoint>();
@@ -123,7 +123,7 @@ public class CreateRegion
     private bool checkIfSkycraper(int x, int z)
     {
         int countWrong = 0;
-        int2 offset = new int2(-1,-1);
+        int2 offset = new int2(-2,-2);
         for (int neighbourX = -1; neighbourX < 2; neighbourX++)
         {
             for (int neighbourZ = -1; neighbourZ < 2; neighbourZ++)
@@ -153,7 +153,7 @@ public class CreateRegion
                 }
             }
         }
-        if(offset.x == -1)
+        if(offset.x == -2)
         {
             return true;
         }
@@ -172,6 +172,10 @@ public class CreateRegion
     }
     public void createRegions(ProceduralTerrain proceduralTerrain, List<Segment> segmentList)
     {
+        cellSizeX = 1026f;
+        cellSizeZ = 1026f;
+        numberofCellsX = Mathf.CeilToInt(proceduralTerrain.borderX / cellSizeX);
+        numberofCellsZ = Mathf.CeilToInt(proceduralTerrain.borderZ / cellSizeZ);
         points = new VoronoiPoint[numberofCellsX, numberofCellsZ];
         cellSizeX = proceduralTerrain.borderX / numberofCellsX;
         cellSizeZ = proceduralTerrain.borderZ / numberofCellsZ;
@@ -225,6 +229,30 @@ public class CreateRegion
             }
         }
         /*
+        for (int x = 0; x < numberofCellsX; x++)
+        {
+            for (int z = 0; z < numberofCellsZ; z++)
+            {
+                Color color = Color.red;
+                float v = cellSizeX / 2;
+                GameObject cuber = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                cuber.GetComponent<Renderer>().material.color = Color.magenta;
+                cuber.transform.position = new Vector3(cellSizeX * x, 102f, cellSizeZ * z+v);
+                cuber.transform.localScale = new Vector3(50f, 10f, cellSizeZ);
+                GameObject cuber2 = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                cuber2.GetComponent<Renderer>().material.color = Color.magenta;
+                cuber2.transform.position = new Vector3(cellSizeX * x+v, 102f, cellSizeZ * z);
+                cuber2.transform.localScale = new Vector3(cellSizeX, 10f, 40f);
+                GameObject cuber3 = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                cuber3.GetComponent<Renderer>().material.color = Color.magenta;
+                cuber3.transform.position = new Vector3(cellSizeX * x + cellSizeX, 102f, cellSizeZ * z+v);
+                cuber3.transform.localScale = new Vector3(40f, 10f, cellSizeZ);
+                GameObject cuber4 = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                cuber4.GetComponent<Renderer>().material.color = Color.magenta;
+                cuber4.transform.position = new Vector3(cellSizeX * x+v, 102f, cellSizeZ * z + cellSizeZ);
+                cuber4.transform.localScale = new Vector3(cellSizeX, 10f, 40f);
+            }
+        }
         float sizeCube = proceduralTerrain.borderX / 250;
         OnDrawGizmosSelected();
         for (int x = 0; x < 250; x++)
@@ -263,6 +291,7 @@ public class CreateRegion
         }
         */
         
+        
     }
 
     private void OnDrawGizmosSelected()
@@ -288,7 +317,6 @@ public class CreateRegion
             cuber.transform.localScale = new Vector3(50f, 50f, 50f);
             cuber.GetComponent<Renderer>().material.color = Color.white;
         }
-
     }
 
 }

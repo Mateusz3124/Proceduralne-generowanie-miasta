@@ -14,13 +14,21 @@ public class Control : MonoBehaviour
     private ProceduralTerrain proceduralTerrain;
     public SplineMesh sm;
     private Texture2D texture_regions;
+    public int riverWidth;
 
     void Start()
     {
         proceduralTerrain = GetComponent<ProceduralTerrain>();
         proceduralTerrain.generate();
 
+        river_Control river = GetComponent<river_Control>();
+        river.riverWidth = riverWidth;
+        river._proceduralTerrain = proceduralTerrain;
+        HashSet<int2> riverData = river.createRandomRiver();
+
         RoadGen roadGen = GetComponent<RoadGen>();
+        roadGen.river = river.spline;
+        roadGen.riverWidth = riverWidth;
         roadGen.minCorner = new Vector2(0f, 0f);
         roadGen.maxCorner = new Vector2(proceduralTerrain.borderX, proceduralTerrain.borderZ);
 
@@ -47,11 +55,12 @@ public class Control : MonoBehaviour
                 texture_regions.SetPixel(i/step, j/step, color);
             }
         }
-        texture_regions.Apply(false, true);
+        //texture_regions.Apply(false, true);
         proceduralTerrain.terrainMaterial.SetTexture("_regions", texture_regions); 
-        //river_Control river = GetComponent<river_Control>();
-        //river._proceduralTerrain = proceduralTerrain;
-        //river.riverToTerrain(river.createRiver());
+        //river.testRiver();
+
+
+        river.riverToTerrain(riverData);
 
     }
     // Update is called once per frame

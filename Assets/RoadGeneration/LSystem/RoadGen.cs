@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Splines;
 
 public class RoadGen : MonoBehaviour
 {
@@ -23,12 +24,14 @@ public class RoadGen : MonoBehaviour
     const float SEGMENT_COLLIDER_WIDTH = 10.0f;
     const int NORMAL_BRANCH_TIME_DELAY_FROM_HIGHWAY = 5;
     const int DEFAULT_SEGMENT_LENGTH = 300;
-
+    [HideInInspector]
+    public Spline river;
     // borders to lsystem
     // has default values but its better to set manually
     public Vector2 minCorner {get; set;} = new Vector2(0f, 0f);
     public Vector2 maxCorner {get; set;} = new Vector2(512f, 512f);
 
+    public int riverWidth = 0;
 
     void Start() 
     {
@@ -43,12 +46,13 @@ public class RoadGen : MonoBehaviour
         float length = direction.magnitude;
 
         Vector2 positionVec = segment.start + 0.5f * direction;
-        segmentObject.transform.position = new Vector3(positionVec.x, 0f, positionVec.y);
+        segmentObject.transform.position = new Vector3(positionVec.x, 100f, positionVec.y);
 
         segmentObject.transform.localScale = new Vector3(SEGMENT_COLLIDER_WIDTH, 0.01f, length);
 
         Vector2 directionVector = direction.normalized;
         segmentObject.transform.forward = new Vector3(directionVector.x, 0f, directionVector.y);
+        segmentObject.GetComponent<Renderer>().material.color = segment.metadata.highway ? Color.red : Color.blue;
     }
 
     private float RandomBranchAngle()
@@ -72,6 +76,8 @@ public class RoadGen : MonoBehaviour
         Segment oppositeDirectionSegment = new Segment(
             center, new Vector2(center.x-HIGHWAY_SEGMENT_LENGTH, center.y),
             0, new SegmentMetadata { highway = true });
+        MakeSegmentOnScene(mainSegment);
+        MakeSegmentOnScene(oppositeDirectionSegment);
         oppositeDirectionSegment.linksB.Add(mainSegment);
         mainSegment.linksB.Add(oppositeDirectionSegment);
         priorityQueue.Push(mainSegment, mainSegment.t);
@@ -108,6 +114,17 @@ public class RoadGen : MonoBehaviour
         int actionPriority = 0;
         float? previousIntersectionDistanceSquared = null;
         List<Segment> matches = new List<Segment>();
+
+        LocalConstraintsRiver localConstraintsRiver = new LocalConstraintsRiver();
+        if (localConstraintsRiver.MakeAction(segment, river, riverWidth))
+        {
+            if (segment.metadata.highway)
+            {
+                Debug.Log("xd");
+                MakeSegmentOnScene(segment);
+            }
+            return false;
+        }
 
         // Check collision around segment
         Vector3 pos3d = segment.CalculatePhysicsShapeTransform().position;
