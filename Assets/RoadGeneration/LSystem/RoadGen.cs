@@ -115,19 +115,11 @@ public class RoadGen : MonoBehaviour
         Actions action = null;
         int actionPriority = 0;
         float? previousIntersectionDistanceSquared = null;
-        List<Segment> matches = new List<Segment>();
 
         // Check collision around segment
         Vector3 pos3d = segment.CalculatePhysicsShapeTransform().position;
-        List<Segment> colliders = PhysicObjects.OverlapCircleSegments(new Vector2(pos3d.x, pos3d.z),
+        List<Segment> matches = PhysicObjects.OverlapCircleSegments(new Vector2(pos3d.x, pos3d.z),
                                                              segment.length * 0.5f + MAX_SNAP_DISTANCE);
-        foreach (Segment collidingSegment in colliders)
-        {
-            if (collidingSegment != null)
-            {
-                matches.Add(collidingSegment);
-            }
-        }
 
         foreach (Segment colliding in matches)
         {
@@ -239,9 +231,20 @@ public class RoadGen : MonoBehaviour
                 newBranches.Add(rightBranch);
             }
         }
+        
+        // make branches not extend beyond area and delete extending non highways
 
-        // make branches not extend beyond area
-        foreach(var b in newBranches) {
+        // remove extending non highways
+        var newBranchesFiltered = newBranches.Where(b => { 
+            return !(b.start.x < minCorner.x || b.start.x > maxCorner.x ||
+                    b.start.y < minCorner.y || b.start.y > maxCorner.y ||
+                    b.end.x < minCorner.x || b.end.x > maxCorner.x ||
+                    b.end.y < minCorner.y || b.end.y > maxCorner.y) ||
+                    b.metadata.highway;
+        });
+
+        // make extending highways stick to border
+        foreach(var b in newBranchesFiltered) {
             if(b.start.x < minCorner.x)
                 b.start = new Vector2(minCorner.x, b.start.y);
             if(b.start.x > maxCorner.x)
@@ -261,12 +264,12 @@ public class RoadGen : MonoBehaviour
                 b.end = new Vector2(b.end.x, maxCorner.y);
         }
         
-        foreach (var branch in newBranches)
+        foreach (var branch in newBranchesFiltered)
         {
             branch.previousSegmentToLink = previousSegment;
         }
 
-        return newBranches.ToList();
+        return newBranchesFiltered.ToList();
     }
 
     private Segment SegmentContinue(Segment previousSegment, float direction) {

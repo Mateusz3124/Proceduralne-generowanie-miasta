@@ -26,8 +26,8 @@ public class Control : MonoBehaviour
         BuildingGen.maxCorner = new Vector2(proceduralTerrain.borderX, proceduralTerrain.borderZ);
         buildingGen.makeBuildingsOnScene();
 
-        // TestPopulation.end = RoadGen.maxCorner;
-        // TestPopulation.makePopulationGrid(roadGen);
+        TestPopulation.end = RoadGen.maxCorner;
+        TestPopulation.makePopulationGrid(roadGen);
     }
     
     void Update() {
