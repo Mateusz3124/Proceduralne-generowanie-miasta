@@ -12,6 +12,7 @@ public class SplineMesh : MonoBehaviour
     private GameObject AddGameObject() {
         meshes.Add(new GameObject());
         var go = meshes[meshes.Count() - 1];
+        go.transform.SetParent(Control.global_transform);
         go.AddComponent<MeshFilter>();
         MeshRenderer meshRenderer = go.AddComponent<MeshRenderer>();
         meshRenderer.material = material;
@@ -25,7 +26,6 @@ public class SplineMesh : MonoBehaviour
         foreach (var sp in s.Splines)
         {
             GameObject go = AddGameObject();
-            go.transform.parent = parent;
             go.transform.position = parent.position;
             Mesh mesh = go.GetComponent<MeshFilter>().mesh;
             int index_offset = vertices.ToArray().Length;

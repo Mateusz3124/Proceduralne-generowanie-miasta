@@ -22,6 +22,7 @@ public class BuildingGen
         List<Building> buildings = GenerateBuildings();
         foreach(var b in buildings) {
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            cube.transform.parent = Control.global_transform;
             cube.transform.localScale = new Vector3(b.width, Random.Range(20f, 100f), b.height);
             cube.transform.rotation = Quaternion.Euler(0f, b.direction, 0f);
             cube.transform.position = new Vector3(b.center.x, 100f, b.center.y);

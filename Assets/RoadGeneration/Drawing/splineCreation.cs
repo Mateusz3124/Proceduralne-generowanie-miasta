@@ -12,7 +12,7 @@ public class splineCreation : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame
@@ -22,7 +22,7 @@ public class splineCreation : MonoBehaviour
     public void createSplines(ProceduralTerrain proceduralTerrain, RoadGen roadGen)
     {
         SplineContainer splineContainer = GetComponent<SplineContainer>();
-        foreach (Segment s in roadGen.GenerateSegments(proceduralTerrain.center))
+        foreach (Segment s in roadGen.GenerateSegments(Vector2.zero))
         {
             createSpline(s, proceduralTerrain, splineContainer);
         }
@@ -35,8 +35,8 @@ public class splineCreation : MonoBehaviour
 
         List<float3> list = new List<float3>();
 
-        float3 positionFirst = new float3(segment.start.x, proceduralTerrain.getHeight(segment.start.x, segment.start.y) + heightOffset, segment.start.y);
-        list.Add(positionFirst);
+        // float3 positionFirst = new float3(segment.start.x, proceduralTerrain.getHeight(segment.start.x, segment.start.y) + heightOffset, segment.start.y);
+        // list.Add(positionFirst);
         //how far away are knots
         float knotOffset = 40;
 
@@ -45,17 +45,17 @@ public class splineCreation : MonoBehaviour
             float lengthFraction = knotOffset / length;
             int counter = 1;
 
-            while(lengthFraction * counter<1)
+            while (lengthFraction * counter < 1)
             {
                 Vector2 pointToAdd = segment.start + ((segment.end - segment.start) * lengthFraction * counter);
                 counter++;
-                float3 positionInside = new float3(pointToAdd.x, proceduralTerrain.getHeight(pointToAdd.x, pointToAdd.y) + heightOffset, pointToAdd.y);
-                list.Add(positionInside);
+                // float3 positionInside = new float3(pointToAdd.x, proceduralTerrain.getHeight(pointToAdd.x, pointToAdd.y) + heightOffset, pointToAdd.y);
+                // list.Add(positionInside);
             }
         }
-        float3 positionLast = new float3(segment.end.x, proceduralTerrain.getHeight(segment.end.x, segment.end.y) + heightOffset, segment.end.y);
+        // float3 positionLast = new float3(segment.end.x, proceduralTerrain.getHeight(segment.end.x, segment.end.y) + heightOffset, segment.end.y);
 
-        list.Add(positionLast);
+        // list.Add(positionLast);
         Spline spline = splineContainer.AddSpline();
         spline.Knots = list.Select(x => new BezierKnot(x));
         spline.SetTangentMode(TangentMode.AutoSmooth);
