@@ -68,22 +68,36 @@ public class RoadGen : MonoBehaviour
 
     public List<Segment> GenerateSegments(Vector2 center) 
     {
-        randomPopOffsetX = UnityEngine.Random.Range(0f, 99999f);
-        randomPopOffsetY = UnityEngine.Random.Range(0f, 99999f);
+        // init randomPopOffset and get maxNoise value
+        Vector2 maxNoisePos = getMaxNoisePos();
 
         List<Segment> segments = new List<Segment>();
         PriorityQueue<Segment, int> priorityQueue = new PriorityQueue<Segment, int>();
         // Main segment and opposite direction segment
         Segment mainSegment = new Segment(
-            center, new Vector2(center.x + HIGHWAY_SEGMENT_LENGTH, center.y),
+            maxNoisePos, new Vector2(maxNoisePos.x + HIGHWAY_SEGMENT_LENGTH, maxNoisePos.y),
             0, new SegmentMetadata { highway = true });
         Segment oppositeDirectionSegment = new Segment(
-            center, new Vector2(center.x-HIGHWAY_SEGMENT_LENGTH, center.y),
+            maxNoisePos, new Vector2(maxNoisePos.x - HIGHWAY_SEGMENT_LENGTH, maxNoisePos.y),
             0, new SegmentMetadata { highway = true });
         oppositeDirectionSegment.linksB.Add(mainSegment);
         mainSegment.linksB.Add(oppositeDirectionSegment);
         priorityQueue.Push(mainSegment, mainSegment.t);
         priorityQueue.Push(oppositeDirectionSegment, oppositeDirectionSegment.t);
+
+        // make roads going from one point to all directions
+        int nmbOfCenterSegments = 10;
+        float angleStep = 360 / nmbOfCenterSegments;
+        float angle = 0f;
+        for(int i = 0; i < nmbOfCenterSegments; i++) {
+            Segment s = Segment.CreateUsingDirection(
+                maxNoisePos, angle, HIGHWAY_SEGMENT_LENGTH, 0, new SegmentMetadata { highway = true }
+            );
+            s.previousSegmentToLink = mainSegment;
+
+            priorityQueue.Push(s, s.t);
+            angle += angleStep;
+        }
 
         while (priorityQueue.length > 0 && segments.Count < segment_count_limit)
         {
@@ -235,11 +249,9 @@ public class RoadGen : MonoBehaviour
         // make branches not extend beyond area and delete extending non highways
 
         // remove extending non highways
-        var newBranchesFiltered = newBranches.Where(b => { 
-            return !(b.start.x < minCorner.x || b.start.x > maxCorner.x ||
-                    b.start.y < minCorner.y || b.start.y > maxCorner.y ||
-                    b.end.x < minCorner.x || b.end.x > maxCorner.x ||
-                    b.end.y < minCorner.y || b.end.y > maxCorner.y) ||
+        var newBranchesFiltered = newBranches.Where(b => {
+            return CheckIfPointInRange(b.start, minCorner, maxCorner) &&
+                    CheckIfPointInRange(b.end, minCorner, maxCorner) ||
                     b.metadata.highway;
         });
 
@@ -270,6 +282,46 @@ public class RoadGen : MonoBehaviour
         }
 
         return newBranchesFiltered.ToList();
+    }
+
+    // set randomPopOffset and return max noise value
+    private Vector2 getMaxNoisePos() {
+        while(true) {
+            randomPopOffsetX = UnityEngine.Random.Range(0f, 99999f);
+            randomPopOffsetY = UnityEngine.Random.Range(0f, 99999f);
+
+            float lenX = maxCorner.x - minCorner.x;
+            float lenY = maxCorner.y - minCorner.y;
+
+            Vector2 minNoiseAccept = new Vector2(minCorner.x + lenX * 0.35f, minCorner.y + lenY * 0.35f);
+            Vector2 maxNoiseAccept = new Vector2(minCorner.x + lenX * 0.65f, minCorner.y + lenY * 0.65f);
+
+            int rowsCols = 500;
+            float stepRow = lenX / rowsCols;
+            float stepCol = lenY / rowsCols;
+
+            float maxNoise = 0f;
+            Vector2 maxNoisePos = new Vector2(0f, 0f);
+
+            for(float i = 0f; i <= maxCorner.x; i += stepRow) {
+                for(float j = 0f; j <= maxCorner.y; j += stepCol) {
+                    float noise = SampleNoise(new Vector2(i, j));
+                    if(noise > maxNoise) {
+                        maxNoisePos = new Vector2(i, j);
+                        maxNoise = noise;
+                    }
+                }
+            }
+
+            if(CheckIfPointInRange(maxNoisePos, minNoiseAccept, maxNoiseAccept)) {
+                return maxNoisePos;
+            }
+        }
+    }
+
+    private bool CheckIfPointInRange(Vector2 point, Vector2 min, Vector2 max) {
+        return point.x >= min.x && point.x <= max.x &&
+                point.y >= min.y && point.y <= max.y;
     }
 
     private Segment SegmentContinue(Segment previousSegment, float direction) {
