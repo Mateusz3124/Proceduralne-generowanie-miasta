@@ -29,7 +29,7 @@ public class ProceduralTerrain : MonoBehaviour {
     public int height = 5;
     public int resolution = 128;
     public int noise_scale = 1;
-    Mesh mesh;
+    public Material terrain_material;
     public void Start() { }
     public void Generate() {
         var heights = new NativeArray<Vector3>(resolution * resolution, Allocator.TempJob);
@@ -60,8 +60,9 @@ public class ProceduralTerrain : MonoBehaviour {
             }
         }
 
-        mesh = new Mesh();
+        Mesh mesh = new Mesh();
         gameObject.AddComponent<MeshRenderer>();
+        gameObject.GetComponent<MeshRenderer>().material = terrain_material;
         gameObject.AddComponent<MeshFilter>();
         var filter = GetComponent<MeshFilter>();
         filter.mesh = mesh;
