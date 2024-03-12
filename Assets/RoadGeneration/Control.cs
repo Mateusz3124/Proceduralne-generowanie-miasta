@@ -30,10 +30,10 @@ public class Control : MonoBehaviour
         splines.createSplines(proceduralTerrain, roadGen);
         sm.CreateMesh(GetComponent<SplineContainer>(), global_transform);
 
-        // BuildingGen buildingGen = new BuildingGen();
-        // BuildingGen.minCorner = proceduralTerrain.borderMin;
-        // BuildingGen.maxCorner = proceduralTerrain.borderMax;
-        // buildingGen.makeBuildingsOnScene();
+        BuildingGen buildingGen = new BuildingGen();
+        BuildingGen.minCorner = proceduralTerrain.GetMinCorner();
+        BuildingGen.maxCorner = proceduralTerrain.GetMaxCorner();
+        buildingGen.makeBuildingsOnScene();
     }
     
 }
