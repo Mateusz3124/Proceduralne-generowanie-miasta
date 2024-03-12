@@ -22,13 +22,13 @@ public class Control : MonoBehaviour
         proceduralTerrain = GetComponent<ProceduralTerrain>();
         proceduralTerrain.Generate();
 
-        // RoadGen roadGen = GetComponent<RoadGen>();
-        // RoadGen.minCorner = proceduralTerrain.borderMin;
-        // RoadGen.maxCorner = proceduralTerrain.borderMax;
+        RoadGen roadGen = GetComponent<RoadGen>();
+        RoadGen.minCorner = proceduralTerrain.GetMinCorner();
+        RoadGen.maxCorner = proceduralTerrain.GetMaxCorner();
         
-        // splineCreation splines = GetComponent<splineCreation>();
-        // splines.createSplines(proceduralTerrain, roadGen);
-        // sm.CreateMesh(GetComponent<SplineContainer>(), global_transform);
+        splineCreation splines = GetComponent<splineCreation>();
+        splines.createSplines(proceduralTerrain, roadGen);
+        sm.CreateMesh(GetComponent<SplineContainer>(), global_transform);
 
         // BuildingGen buildingGen = new BuildingGen();
         // BuildingGen.minCorner = proceduralTerrain.borderMin;

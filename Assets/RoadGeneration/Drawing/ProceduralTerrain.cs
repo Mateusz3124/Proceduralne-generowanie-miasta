@@ -31,12 +31,12 @@ public class ProceduralTerrain : MonoBehaviour {
     public int size = 128;
     public int height = 5;
     public int resolution = 128;
-    public int noise_scale = 1;
-    [HideInInspector] public float noise_offset;
+    public float noise_scale = 1.0f;
+    [HideInInspector] public float noise_offset = 0.0f;
     public Material terrain_material;
     public void Start() { }
     public void Generate() {
-        noise_offset = UnityEngine.Random.Range(-1.0f, 1.0f) * resolution * size;
+        // noise_offset = UnityEngine.Random.Range(-1.0f, 1.0f) * resolution * size;
         var heights = new NativeArray<Vector3>(resolution * resolution, Allocator.TempJob);
         NoiseJob job = new NoiseJob{
             row_length = resolution,
@@ -79,6 +79,23 @@ public class ProceduralTerrain : MonoBehaviour {
         heights.Dispose();
         mesh.uv = uvs.ToArray();
         mesh.RecalculateNormals();
+    }
+    public float getHeight(float x, float y) {
+        FastNoiseLite noise = new FastNoiseLite();
+        noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2);
+        return noise.GetNoise(x + noise_offset, y + noise_offset) * height;
+    }
+
+    public float getHeight(Vector3 pos) {
+        return getHeight(pos.x, pos.z);
+    }
+
+    public float2 GetMinCorner() {
+        return new float2(-size * 0.5f);
+    }
+
+    public float2 GetMaxCorner() {
+        return new float2(size * 0.5f);
     }
 };
 // public class ProceduralTerrain : MonoBehaviour

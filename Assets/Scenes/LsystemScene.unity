@@ -336,10 +336,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   batch_size: 16
-  size: 5
-  height: 2
+  size: 10000
+  height: 5
   resolution: 2048
-  noise_scale: 50
+  noise_scale: 0.001
+  noise_offset: 0
   terrain_material: {fileID: 2100000, guid: 302ecb83b4f464dfba8418de7af4c128, type: 2}
 --- !u!114 &1789418048
 MonoBehaviour:

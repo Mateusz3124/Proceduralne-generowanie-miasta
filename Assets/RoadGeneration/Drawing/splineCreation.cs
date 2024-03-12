@@ -35,8 +35,8 @@ public class splineCreation : MonoBehaviour
 
         List<float3> list = new List<float3>();
 
-        // float3 positionFirst = new float3(segment.start.x, proceduralTerrain.getHeight(segment.start.x, segment.start.y) + heightOffset, segment.start.y);
-        // list.Add(positionFirst);
+        float3 positionFirst = new float3(segment.start.x, proceduralTerrain.getHeight(segment.start.x, segment.start.y) + heightOffset, segment.start.y);
+        list.Add(positionFirst);
         //how far away are knots
         float knotOffset = 40;
 
@@ -49,13 +49,13 @@ public class splineCreation : MonoBehaviour
             {
                 Vector2 pointToAdd = segment.start + ((segment.end - segment.start) * lengthFraction * counter);
                 counter++;
-                // float3 positionInside = new float3(pointToAdd.x, proceduralTerrain.getHeight(pointToAdd.x, pointToAdd.y) + heightOffset, pointToAdd.y);
-                // list.Add(positionInside);
+                float3 positionInside = new float3(pointToAdd.x, proceduralTerrain.getHeight(pointToAdd.x, pointToAdd.y) + heightOffset, pointToAdd.y);
+                list.Add(positionInside);
             }
         }
-        // float3 positionLast = new float3(segment.end.x, proceduralTerrain.getHeight(segment.end.x, segment.end.y) + heightOffset, segment.end.y);
+        float3 positionLast = new float3(segment.end.x, proceduralTerrain.getHeight(segment.end.x, segment.end.y) + heightOffset, segment.end.y);
 
-        // list.Add(positionLast);
+        list.Add(positionLast);
         Spline spline = splineContainer.AddSpline();
         spline.Knots = list.Select(x => new BezierKnot(x));
         spline.SetTangentMode(TangentMode.AutoSmooth);

@@ -46,22 +46,22 @@ public class RoadGenerator : MonoBehaviour
 
     void Start()
     {
-        // plane_min_corner.x = 0;
-        // plane_min_corner.y = 0;
-        // plane_max_corner.x = theTerrain.width;
-        // plane_max_corner.y = theTerrain.height;
+        plane_min_corner.x = theTerrain.GetMinCorner().x;
+        plane_min_corner.y = theTerrain.GetMinCorner().y;
+        plane_max_corner.x = theTerrain.GetMaxCorner().x;
+        plane_max_corner.y = theTerrain.GetMaxCorner().y;
 
-        // var plane_width = (int)(plane_max_corner.x - plane_min_corner.x);
-        // num_cells_in_row = plane_width / road_tile_size;
-        // road_type_grid = new RoadType[num_cells_in_row, num_cells_in_row];
-        // InitializeRoadTypeGrid();
-        // // River river = new River(this);
-        // // river.MakeRiver();
-        // GenerateRoad(new Vector2Int(num_cells_in_row / 2, num_cells_in_row / 2), number_of_iterations); // start from center and use 5 iterations
-        // RoadTools rt = new RoadTools(this);
-        // rt.ExtrudeDeadEndingRoads();
-        // rt.DeleteRandom4WayIntersectionsUntilUnderLimit(max_num_4way_intersections);
-        // DrawRoadBasedOnRoadTypeGrid(); // using data in road_type_grid, instantiate correct prefabs to visualize the road.
+        var plane_width = (int)(plane_max_corner.x - plane_min_corner.x);
+        num_cells_in_row = plane_width / road_tile_size;
+        road_type_grid = new RoadType[num_cells_in_row, num_cells_in_row];
+        InitializeRoadTypeGrid();
+        // River river = new River(this);
+        // river.MakeRiver();
+        GenerateRoad(new Vector2Int(num_cells_in_row / 2, num_cells_in_row / 2), number_of_iterations); // start from center and use 5 iterations
+        RoadTools rt = new RoadTools(this);
+        rt.ExtrudeDeadEndingRoads();
+        rt.DeleteRandom4WayIntersectionsUntilUnderLimit(max_num_4way_intersections);
+        DrawRoadBasedOnRoadTypeGrid(); // using data in road_type_grid, instantiate correct prefabs to visualize the road.
     }
 
     /*
