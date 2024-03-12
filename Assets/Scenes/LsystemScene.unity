@@ -133,7 +133,7 @@ GameObject:
   m_Component:
   - component: {fileID: 679214261}
   m_Layer: 0
-  m_Name: asd
+  m_Name: GlobalControl
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -151,7 +151,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
-  m_Children: []
+  m_Children:
+  - {fileID: 1789418046}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1226911501
@@ -315,12 +316,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1789418044}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 679214261}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1789418047
 MonoBehaviour:
@@ -334,11 +335,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3da4316a8ef1cb4498d542f5d93da0af, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  num_jobs: 32
-  size: 5
+  batch_size: 16
+  size: 1
   height: 2
-  resolution: 1024
-  noise_scale: 20
+  resolution: 2048
+  noise_scale: 50
 --- !u!114 &1789418048
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -553,5 +554,4 @@ SceneRoots:
   m_Roots:
   - {fileID: 1902108078}
   - {fileID: 1226911503}
-  - {fileID: 1789418046}
   - {fileID: 679214261}

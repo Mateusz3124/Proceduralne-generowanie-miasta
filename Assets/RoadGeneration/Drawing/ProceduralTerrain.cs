@@ -7,27 +7,24 @@ using Unity.Jobs;
 using Unity.Collections;
 using Unity.VisualScripting;
 using System.Linq;
-struct NoiseJob : IJob {
-    public float yoffset;
-    public float row_length;
+struct NoiseJob : IJobParallelFor {
+    public int row_length;
     public float scale;
     public float noise_scale;
     public float noise_height;
     public NativeArray<Vector3> heights;
-    public void Execute() {
+
+    public void Execute(int i) {
         FastNoiseLite noise = new FastNoiseLite();
         noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2);
-
-        for(int i=0; i<heights.Length; ++i) {
-            var xpos = (float)(i % row_length) * scale;
-            var ypos = (float)(yoffset + (float)i/(float)row_length) * scale;
-            heights[i] = new Vector3(xpos, noise.GetNoise(xpos*noise_scale, ypos*noise_scale) * noise_height, ypos);
-        }
+        var xpos = (i % row_length) * scale;
+        var ypos = (i / row_length) * scale;
+        heights[i] = new Vector3(xpos, noise.GetNoise(xpos * noise_scale, ypos * noise_scale) * noise_height, ypos);
     }
 };
 
 public class ProceduralTerrain : MonoBehaviour { 
-    public int num_jobs = 8;
+    public int batch_size = 8;
     public int size = 128;
     public int height = 5;
     public int resolution = 128;
@@ -35,49 +32,31 @@ public class ProceduralTerrain : MonoBehaviour {
     Mesh mesh;
     public void Start() { }
     public void Generate() {
-        JobHandle[] handles = new JobHandle[num_jobs];
-        NoiseJob[] jobs = new NoiseJob[num_jobs];
-        int num_rows_for_job = (int)Math.Ceiling((float)resolution / (float)num_jobs);
-        for(int i=0; i<num_jobs; ++i) {
-            int yoffset = i * num_rows_for_job; 
-            int num_rows_clamped = num_rows_for_job - Math.Max(0, yoffset+num_rows_for_job - resolution);
-            int length = num_rows_clamped * resolution;
-            NoiseJob job = new NoiseJob{
-                yoffset = yoffset,
-                row_length = resolution,
-                scale = (float)size / (float)resolution,
-                noise_scale = noise_scale,
-                noise_height = height,
-                heights = new NativeArray<Vector3>(resolution * num_rows_clamped, Allocator.TempJob),
-            };
-            jobs[i] = job;
-            Debug.Log("JOB: yoff " + job.yoffset + " start: " + yoffset*resolution + " length: " + length);
-            handles[i] = job.Schedule();
-        }
+        var heights = new NativeArray<Vector3>(resolution * resolution, Allocator.TempJob);
+        NoiseJob job = new NoiseJob{
+            row_length = resolution,
+            scale = (float)size / (float)(resolution-1),
+            noise_scale = noise_scale,
+            noise_height = height,
+            heights = heights
+        };
+        var handle = job.Schedule(heights.Length, batch_size);
+        handle.Complete();
 
-        Vector3[] verts = new Vector3[resolution*resolution];
         Vector2[] uvs = new Vector2[resolution*resolution];
-        for(int i=0; i<num_jobs; ++i) {
-            handles[i].Complete();
-            int yoffset = i * num_rows_for_job * resolution; 
-            Debug.Log("COPYING DATA AT OFFSET " + yoffset);
-            for(int j=0; j<jobs[i].heights.Length; ++j) {
-                verts[yoffset + j] = jobs[i].heights[j];
-                uvs[yoffset + j] = new Vector2(jobs[i].heights[j].x, jobs[i].heights[j].z);
-                var v = verts[yoffset + j];
-                Debug.Log("VERT: [" + v.x + " " + v.y + " " + v.z + "]");
-            }
-            jobs[i].heights.Dispose();
+        for(int i=0; i<heights.Length; ++i) {
+            uvs[i] = new Vector2(heights[i].x, heights[i].z);
         }
         List<int> inds = new List<int>();
-        for(int i=0; i<resolution-1; ++i) {
-            for(int j=0; j<resolution-1; ++j) {
-                inds.Add(i*resolution + j + 1);
-                inds.Add(i*resolution + j);
-                inds.Add(i*resolution + j + resolution);
-                inds.Add(i*resolution + j + 1);
-                inds.Add(i*resolution + j + resolution);
-                inds.Add(i*resolution + j + resolution + 1);
+        for (int i = 0; i < resolution - 1; ++i) {
+            for (int j = 0; j < resolution - 1; ++j) {
+                int currentIndex = i * resolution + j;
+                inds.Add(currentIndex + 1);
+                inds.Add(currentIndex);
+                inds.Add(currentIndex + resolution);
+                inds.Add(currentIndex + 1);
+                inds.Add(currentIndex + resolution);
+                inds.Add(currentIndex + resolution + 1);
             }
         }
 
@@ -86,8 +65,10 @@ public class ProceduralTerrain : MonoBehaviour {
         gameObject.AddComponent<MeshFilter>();
         var filter = GetComponent<MeshFilter>();
         filter.mesh = mesh;
-        mesh.vertices = verts;
+        mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+        mesh.vertices = heights.ToArray();
         mesh.triangles = inds.ToArray();
+        heights.Dispose();
         mesh.uv = uvs.ToArray();
         mesh.RecalculateNormals();
     }
