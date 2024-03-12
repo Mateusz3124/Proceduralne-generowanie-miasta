@@ -336,7 +336,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   batch_size: 16
-  size: 1
+  size: 5
   height: 2
   resolution: 2048
   noise_scale: 50

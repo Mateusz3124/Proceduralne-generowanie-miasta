@@ -7,19 +7,22 @@ using Unity.Jobs;
 using Unity.Collections;
 using Unity.VisualScripting;
 using System.Linq;
+using System.Security.Cryptography;
 struct NoiseJob : IJobParallelFor {
     public int row_length;
     public float scale;
     public float noise_scale;
     public float noise_height;
+    public float offset;
+    public float noise_offset;
     public NativeArray<Vector3> heights;
 
     public void Execute(int i) {
         FastNoiseLite noise = new FastNoiseLite();
         noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2);
-        var xpos = (i % row_length) * scale;
-        var ypos = (i / row_length) * scale;
-        heights[i] = new Vector3(xpos, noise.GetNoise(xpos * noise_scale, ypos * noise_scale) * noise_height, ypos);
+        var xpos = (i % row_length) * scale + offset;
+        var ypos = (i / row_length) * scale + offset;
+        heights[i] = new Vector3(xpos, noise.GetNoise(xpos * noise_scale + noise_offset, ypos * noise_scale + noise_offset) * noise_height, ypos);
     }
 };
 
@@ -29,15 +32,19 @@ public class ProceduralTerrain : MonoBehaviour {
     public int height = 5;
     public int resolution = 128;
     public int noise_scale = 1;
+    [HideInInspector] public float noise_offset;
     public Material terrain_material;
     public void Start() { }
     public void Generate() {
+        noise_offset = UnityEngine.Random.Range(-1.0f, 1.0f) * resolution * size;
         var heights = new NativeArray<Vector3>(resolution * resolution, Allocator.TempJob);
         NoiseJob job = new NoiseJob{
             row_length = resolution,
             scale = (float)size / (float)(resolution-1),
             noise_scale = noise_scale,
             noise_height = height,
+            offset = -size * 0.5f,
+            noise_offset = noise_offset,
             heights = heights
         };
         var handle = job.Schedule(heights.Length, batch_size);
