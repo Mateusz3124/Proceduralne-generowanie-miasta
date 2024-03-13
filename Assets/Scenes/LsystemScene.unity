@@ -288,6 +288,8 @@ GameObject:
   - component: {fileID: 1789418052}
   - component: {fileID: 1789418053}
   - component: {fileID: 1789418054}
+  - component: {fileID: 1789418055}
+  - component: {fileID: 1789418056}
   m_Layer: 0
   m_Name: LSystemGen
   m_TagString: Untagged
@@ -307,7 +309,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c0e32f364d27bf44595ec68cd1f8f1a1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  segment_count_limit: 500
+  segment_count_limit: 600
+  river:
+    m_EditModeType: 1
+    m_Knots: []
+    m_MetaData: []
+    m_Closed: 0
+    m_IntData:
+      m_Data: []
+    m_FloatData:
+      m_Data: []
+    m_Float4Data:
+      m_Data: []
+    m_ObjectData:
+      m_Data: []
+  riverWidth: 0
 --- !u!4 &1789418046
 Transform:
   m_ObjectHideFlags: 0
@@ -356,6 +372,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   transform_object: {fileID: 679214260}
   sm: {fileID: 1789418053}
+  riverWidth: 50
 --- !u!114 &1789418052
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -397,6 +414,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   road_width: 5
+  road_height: 0.5
   road_height: 0.5
   road_segments: 10
   material: {fileID: 2100000, guid: dcd18e700ded0614583af7b14f395377, type: 2}
@@ -472,7 +490,7 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.3
-  far clip plane: 1000
+  far clip plane: 5000
   field of view: 60
   orthographic: 0
   orthographic size: 5
@@ -505,7 +523,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 56.27, y: 66.367, z: -13.868}
+  m_LocalEulerAnglesHint: {x: 13.3, y: 25.7, z: 0}
 --- !u!114 &1902108079
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -8,7 +8,8 @@ using Unity.Collections;
 using Unity.VisualScripting;
 using System.Linq;
 using System.Security.Cryptography;
-struct NoiseJob : IJobParallelFor {
+struct NoiseJob : IJobParallelFor
+{
     public int row_length;
     public float scale;
     public float noise_scale;
@@ -17,7 +18,8 @@ struct NoiseJob : IJobParallelFor {
     public float noise_offset;
     public NativeArray<Vector3> heights;
 
-    public void Execute(int i) {
+    public void Execute(int i)
+    {
         FastNoiseLite noise = new FastNoiseLite();
         noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2);
         var xpos = (i % row_length) * scale + offset;
@@ -26,7 +28,8 @@ struct NoiseJob : IJobParallelFor {
     }
 };
 
-public class ProceduralTerrain : MonoBehaviour { 
+public class ProceduralTerrain : MonoBehaviour
+{
     public int batch_size = 8;
     public int size = 128;
     public int height = 5;
@@ -35,12 +38,14 @@ public class ProceduralTerrain : MonoBehaviour {
     [HideInInspector] public float noise_offset = 0.0f;
     public Material terrain_material;
     public void Start() { }
-    public void Generate() {
+    public void Generate()
+    {
         noise_offset = UnityEngine.Random.Range(-1.0f, 1.0f) * resolution * size;
         var heights = new NativeArray<Vector3>(resolution * resolution, Allocator.TempJob);
-        NoiseJob job = new NoiseJob{
+        NoiseJob job = new NoiseJob
+        {
             row_length = resolution,
-            scale = (float)size / (float)(resolution-1),
+            scale = (float)size / (float)(resolution - 1),
             noise_scale = noise_scale,
             noise_height = height,
             offset = -size * 0.5f,
@@ -50,13 +55,16 @@ public class ProceduralTerrain : MonoBehaviour {
         var handle = job.Schedule(heights.Length, batch_size);
         handle.Complete();
 
-        Vector2[] uvs = new Vector2[resolution*resolution];
-        for(int i=0; i<heights.Length; ++i) {
+        Vector2[] uvs = new Vector2[resolution * resolution];
+        for (int i = 0; i < heights.Length; ++i)
+        {
             uvs[i] = new Vector2(heights[i].x, heights[i].z);
         }
         List<int> inds = new List<int>();
-        for (int i = 0; i < resolution - 1; ++i) {
-            for (int j = 0; j < resolution - 1; ++j) {
+        for (int i = 0; i < resolution - 1; ++i)
+        {
+            for (int j = 0; j < resolution - 1; ++j)
+            {
                 int currentIndex = i * resolution + j;
                 inds.Add(currentIndex + 1);
                 inds.Add(currentIndex);
@@ -80,21 +88,25 @@ public class ProceduralTerrain : MonoBehaviour {
         mesh.uv = uvs.ToArray();
         mesh.RecalculateNormals();
     }
-    public float getHeight(float x, float y) {
+    public float getHeight(float x, float y)
+    {
         FastNoiseLite noise = new FastNoiseLite();
         noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2);
-        return noise.GetNoise(x*noise_scale + noise_offset, y*noise_scale + noise_offset) * height;
+        return noise.GetNoise(x * noise_scale + noise_offset, y * noise_scale + noise_offset) * height;
     }
 
-    public float getHeight(Vector3 pos) {
+    public float getHeight(Vector3 pos)
+    {
         return getHeight(pos.x, pos.z);
     }
 
-    public float2 GetMinCorner() {
+    public float2 GetMinCorner()
+    {
         return new float2(-size * 0.5f);
     }
 
-    public float2 GetMaxCorner() {
+    public float2 GetMaxCorner()
+    {
         return new float2(size * 0.5f);
     }
 };
