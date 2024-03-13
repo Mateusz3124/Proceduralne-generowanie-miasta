@@ -1,8 +1,14 @@
+using Palmmedia.ReportGenerator.Core.Parser.Analysis;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Mathematics;
+using Unity.VisualScripting;
+using UnityEditor.Advertisements;
 using UnityEngine;
+using UnityEngine.Splines;
+using static UnityEngine.Rendering.HableCurve;
 
 public class RoadGen : MonoBehaviour
 {
@@ -25,7 +31,8 @@ public class RoadGen : MonoBehaviour
     const float SEGMENT_COLLIDER_WIDTH = 10.0f;
     const int NORMAL_BRANCH_TIME_DELAY_FROM_HIGHWAY = 5;
     const int DEFAULT_SEGMENT_LENGTH = 300;
-
+    [HideInInspector]
+    public river_Control river;
     // borders to lsystem
     // has default values but its better to set manually
     public static Vector2 minCorner {get; set;} = new Vector2(0f, 0f);
@@ -33,7 +40,6 @@ public class RoadGen : MonoBehaviour
 
     private float randomPopOffsetX;
     private float randomPopOffsetY;
-
 
     void Start() 
     {
@@ -48,12 +54,13 @@ public class RoadGen : MonoBehaviour
         float length = direction.magnitude;
 
         Vector2 positionVec = segment.start + 0.5f * direction;
-        segmentObject.transform.position = new Vector3(positionVec.x, 0f, positionVec.y);
+        segmentObject.transform.position = new Vector3(positionVec.x, 100f, positionVec.y);
 
         segmentObject.transform.localScale = new Vector3(SEGMENT_COLLIDER_WIDTH, 0.01f, length);
 
         Vector2 directionVector = direction.normalized;
         segmentObject.transform.forward = new Vector3(directionVector.x, 0f, directionVector.y);
+        segmentObject.GetComponent<Renderer>().material.color = segment.metadata.highway ? Color.red : Color.blue;
     }
 
     private float RandomBranchAngle()
@@ -80,6 +87,8 @@ public class RoadGen : MonoBehaviour
         Segment oppositeDirectionSegment = new Segment(
             maxNoisePos, new Vector2(maxNoisePos.x - HIGHWAY_SEGMENT_LENGTH, maxNoisePos.y),
             0, new SegmentMetadata { highway = true });
+        MakeSegmentOnScene(mainSegment);
+        MakeSegmentOnScene(oppositeDirectionSegment);
         oppositeDirectionSegment.linksB.Add(mainSegment);
         mainSegment.linksB.Add(oppositeDirectionSegment);
         priorityQueue.Push(mainSegment, mainSegment.t);
@@ -185,7 +194,6 @@ public class RoadGen : MonoBehaviour
         {
             return action.MakeAction(segment, segments);
         }
-
         return true;
     }
 
@@ -250,9 +258,9 @@ public class RoadGen : MonoBehaviour
 
         // remove extending non highways
         var newBranchesFiltered = newBranches.Where(b => {
-            return CheckIfPointInRange(b.start, minCorner, maxCorner) &&
+            return (CheckIfPointInRange(b.start, minCorner, maxCorner) &&
                     CheckIfPointInRange(b.end, minCorner, maxCorner) ||
-                    b.metadata.highway;
+                    b.metadata.highway) && !checkIfCollisionOrCrossingRiver(branch);
         });
 
         // make extending highways stick to border
@@ -275,13 +283,48 @@ public class RoadGen : MonoBehaviour
             if(b.end.y > maxCorner.y)
                 b.end = new Vector2(b.end.x, maxCorner.y);
         }
-        
-        foreach (var branch in newBranchesFiltered)
-        {
+
+        foreach (var branch in newBranchesFiltered) {
             branch.previousSegmentToLink = previousSegment;
         }
 
-        return newBranchesFiltered.ToList();
+        return newBranchesFiltered;
+    }
+
+    private bool checkIfCollisionOrCrossingRiver(Segment segment)
+    {
+        float3 pointOnSpline;
+        float distance;
+        (distance, pointOnSpline) = river.ifRiver(segment.end.x,segment.end.y);
+        if (distance < river.riverWidth * 1.6)
+        {
+            if (segment.metadata.highway)
+            {
+                Vector2 orginalDirection = segment.end - segment.start;
+                Vector2 normalizedDirection = orginalDirection.normalized;
+                Vector2 offset = normalizedDirection * (distance + (river.riverWidth * 20f));
+                segment.end = segment.end + offset;
+                MakeSegmentOnScene(segment);
+                return false;
+            }
+            return true;
+        }
+        return actionWhenRoadCrossesRiver(pointOnSpline, segment);
+    }
+
+    private bool actionWhenRoadCrossesRiver(float3 point, Segment segment)
+    {
+        float differenceStartX = point.x - segment.start.x;
+        float differenceEndX = point.x - segment.end.x;
+        if (differenceEndX * differenceStartX < 0)
+        {
+            return !segment.metadata.highway;
+        }
+        if(differenceStartX ==0 && differenceEndX == 0)
+        {
+            return true;
+        }
+        return false;
     }
 
     // set randomPopOffset and return max noise value

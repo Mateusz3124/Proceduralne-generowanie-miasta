@@ -46,10 +46,10 @@ public class RoadGenerator : MonoBehaviour
 
     void Start()
     {
-        plane_min_corner.x = 0;
-        plane_min_corner.y = 0;
-        plane_max_corner.x = theTerrain.width;
-        plane_max_corner.y = theTerrain.height;
+        plane_min_corner.x = theTerrain.GetMinCorner().x;
+        plane_min_corner.y = theTerrain.GetMinCorner().y;
+        plane_max_corner.x = theTerrain.GetMaxCorner().x;
+        plane_max_corner.y = theTerrain.GetMaxCorner().y;
 
         var plane_width = (int)(plane_max_corner.x - plane_min_corner.x);
         num_cells_in_row = plane_width / road_tile_size;
@@ -223,38 +223,38 @@ public class RoadGenerator : MonoBehaviour
 
         // for the time being since there is no map i will manually do the heights but normally it will be based on start_pos and end_pos
         //height where road starts
-        Vector3 signPosition = new Vector3(start_pos[0], 0, start_pos[1]);
-        float start_height = theTerrain.terrain.SampleHeight(signPosition);
-        //height where end of the road
-        Vector3 signPosition2 = new Vector3(end_pos[0], 0, end_pos[1]);
-        float end_height = theTerrain.terrain.SampleHeight(signPosition2);
+        // Vector3 signPosition = new Vector3(start_pos[0], 0, start_pos[1]);
+        // float start_height = theTerrain.terrain.SampleHeight(signPosition);
+        // //height where end of the road
+        // Vector3 signPosition2 = new Vector3(end_pos[0], 0, end_pos[1]);
+        // float end_height = theTerrain.terrain.SampleHeight(signPosition2);
 
-        float difference = start_height - end_height;
+        // float difference = start_height - end_height;
 
-        if(difference == 0.0f) 
-        {
-             // to be implemented get height of previous tile and give it rather than 0.1f
-            road.GetComponent<Transform>().position = new Vector3(pos_x + road_tile_size / 2, start_height, pos_z + road_tile_size / 2);
-            road.GetComponent<Transform>().rotation = rotation * (road.GetComponent<Transform>().rotation);
-        }
-        else if(difference < 0.0f) 
-        {
-            float angleInRadians = Mathf.Atan2((-difference)/2, road_tile_size / 2);
-            float angleInDegrees = Mathf.Rad2Deg * angleInRadians;
-            road.GetComponent<Transform>().position = new Vector3(pos_x + road_tile_size / 2, start_height + (-difference) / 2, pos_z + road_tile_size / 2);
-            road.GetComponent<Transform>().rotation = rotation * (road.GetComponent<Transform>().rotation * Quaternion.Euler((-angleInDegrees), 0.0f, 0.0f));
-            float scaleY = GetProperScale(difference);
-            road.GetComponent<Transform>().localScale += new Vector3(0,scaleY,0);
-        }
-        else
-        {
-            float angleInRadians = Mathf.Atan2(difference / 2, road_tile_size / 2);
-            float angleInDegrees = Mathf.Rad2Deg * angleInRadians;
-            road.GetComponent<Transform>().position = new Vector3(pos_x + road_tile_size / 2, start_height - difference / 2, pos_z + road_tile_size / 2);
-            road.GetComponent<Transform>().rotation = rotation * (road.GetComponent<Transform>().rotation * Quaternion.Euler(angleInDegrees, 0.0f, 0.0f));
-            float scaleY = GetProperScale(difference);
-            road.GetComponent<Transform>().localScale += new Vector3(0, scaleY, 0);
-        }
+        // if(difference == 0.0f) 
+        // {
+        //      // to be implemented get height of previous tile and give it rather than 0.1f
+        //     road.GetComponent<Transform>().position = new Vector3(pos_x + road_tile_size / 2, start_height, pos_z + road_tile_size / 2);
+        //     road.GetComponent<Transform>().rotation = rotation * (road.GetComponent<Transform>().rotation);
+        // }
+        // else if(difference < 0.0f) 
+        // {
+        //     float angleInRadians = Mathf.Atan2((-difference)/2, road_tile_size / 2);
+        //     float angleInDegrees = Mathf.Rad2Deg * angleInRadians;
+        //     road.GetComponent<Transform>().position = new Vector3(pos_x + road_tile_size / 2, start_height + (-difference) / 2, pos_z + road_tile_size / 2);
+        //     road.GetComponent<Transform>().rotation = rotation * (road.GetComponent<Transform>().rotation * Quaternion.Euler((-angleInDegrees), 0.0f, 0.0f));
+        //     float scaleY = GetProperScale(difference);
+        //     road.GetComponent<Transform>().localScale += new Vector3(0,scaleY,0);
+        // }
+        // else
+        // {
+        //     float angleInRadians = Mathf.Atan2(difference / 2, road_tile_size / 2);
+        //     float angleInDegrees = Mathf.Rad2Deg * angleInRadians;
+        //     road.GetComponent<Transform>().position = new Vector3(pos_x + road_tile_size / 2, start_height - difference / 2, pos_z + road_tile_size / 2);
+        //     road.GetComponent<Transform>().rotation = rotation * (road.GetComponent<Transform>().rotation * Quaternion.Euler(angleInDegrees, 0.0f, 0.0f));
+        //     float scaleY = GetProperScale(difference);
+        //     road.GetComponent<Transform>().localScale += new Vector3(0, scaleY, 0);
+        // }
     }
     // need to scale since diagonal is longer
     float GetProperScale(float difference)

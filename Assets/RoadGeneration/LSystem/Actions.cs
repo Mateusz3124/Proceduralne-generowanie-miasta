@@ -1,8 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Unity.Mathematics;
 using UnityEditor.SearchService;
+using UnityEngine.Splines;
 using UnityEngine;
+using static UnityEngine.Rendering.HableCurve;
 
 
 public interface Actions

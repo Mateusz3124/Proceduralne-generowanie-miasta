@@ -12,6 +12,7 @@ public class SplineMesh : MonoBehaviour
     private GameObject AddGameObject() {
         meshes.Add(new GameObject());
         var go = meshes[meshes.Count() - 1];
+        go.transform.SetParent(Control.global_transform);
         go.AddComponent<MeshFilter>();
         MeshRenderer meshRenderer = go.AddComponent<MeshRenderer>();
         meshRenderer.material = material;
@@ -25,7 +26,6 @@ public class SplineMesh : MonoBehaviour
         foreach (var sp in s.Splines)
         {
             GameObject go = AddGameObject();
-            go.transform.parent = parent;
             go.transform.position = parent.position;
             Mesh mesh = go.GetComponent<MeshFilter>().mesh;
             int index_offset = vertices.ToArray().Length;
@@ -33,7 +33,7 @@ public class SplineMesh : MonoBehaviour
             //top verticies
             for (uint i = 0; i <= road_segments; ++i)
             {
-                var t = (float)i / (float)road_segments;
+                float t = (float)i / (float)road_segments;
                 var pos = sp.EvaluatePosition(t);
                 var tan = sp.EvaluateTangent(t);
                 var bitan = Vector3.Normalize(Vector3.Cross(Vector3.up, tan)) * road_width * 0.5f;
@@ -49,8 +49,8 @@ public class SplineMesh : MonoBehaviour
                 var pos = sp.EvaluatePosition(t);
                 var tan = sp.EvaluateTangent(t);
                 var bitan = Vector3.Normalize(Vector3.Cross(Vector3.up, tan)) * road_width * 0.5f;
-                var p1 = pos - new float3(bitan) - new float3(0, 0.5f, 0);
-                var p2 = pos + new float3(bitan) - new float3(0, 0.5f, 0);
+                var p1 = pos - new float3(bitan) - new float3(0, road_height, 0);
+                var p2 = pos + new float3(bitan) - new float3(0, road_height, 0);
                 vertices.Add(p1);
                 vertices.Add(p2);
             }
