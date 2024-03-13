@@ -16,9 +16,8 @@ struct NoiseJob : IJobParallelFor {
     public float offset;
     public float noise_offset;
     public NativeArray<Vector3> heights;
-    static FastNoiseLite noise = new FastNoiseLite();
+    public static FastNoiseLite noise = new FastNoiseLite();
     public void Execute(int i) {
-        noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2);
         var xpos = (i % row_length) * scale + offset;
         var ypos = (i / row_length) * scale + offset;
         heights[i] = new Vector3(xpos, noise.GetNoise(xpos * noise_scale + noise_offset, ypos * noise_scale + noise_offset) * noise_height, ypos);
@@ -37,6 +36,7 @@ public class ProceduralTerrain : MonoBehaviour {
     public void Generate() {
         noise_offset = UnityEngine.Random.Range(-1.0f, 1.0f) * resolution * size;
         var heights = new NativeArray<Vector3>(resolution * resolution, Allocator.TempJob);
+        NoiseJob.noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2S);
         NoiseJob job = new NoiseJob{
             row_length = resolution,
             scale = (float)size / (float)(resolution-1),
