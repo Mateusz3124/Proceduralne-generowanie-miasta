@@ -38,7 +38,7 @@ public class Control : MonoBehaviour
         splineCreation splines = GetComponent<splineCreation>();
         splines.createSplines(proceduralTerrain, segmentList);
         sm.CreateMesh(GetComponent<SplineContainer>(), transform);
-
+        /*
         CreateRegion regions = new CreateRegion();
         regions.createRegions(proceduralTerrain, segmentList);
         const float num_regions = 5.0f;
@@ -60,8 +60,8 @@ public class Control : MonoBehaviour
         //river.testRiver();
 
 
-        river.riverToTerrain(riverData);
-
+        //river.riverToTerrain(riverData);
+        */
     }
     // Update is called once per frame
     void Update()

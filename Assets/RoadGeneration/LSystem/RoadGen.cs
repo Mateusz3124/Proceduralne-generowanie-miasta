@@ -1,10 +1,14 @@
+using Palmmedia.ReportGenerator.Core.Parser.Analysis;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Mathematics;
 using Unity.VisualScripting;
+using UnityEditor.Advertisements;
 using UnityEngine;
 using UnityEngine.Splines;
+using static UnityEngine.Rendering.HableCurve;
 
 public class RoadGen : MonoBehaviour
 {
@@ -30,7 +34,7 @@ public class RoadGen : MonoBehaviour
     // has default values but its better to set manually
     public Vector2 minCorner {get; set;} = new Vector2(0f, 0f);
     public Vector2 maxCorner {get; set;} = new Vector2(512f, 512f);
-
+    [HideInInspector]
     public int riverWidth = 0;
 
     void Start() 
@@ -115,17 +119,6 @@ public class RoadGen : MonoBehaviour
         float? previousIntersectionDistanceSquared = null;
         List<Segment> matches = new List<Segment>();
 
-        LocalConstraintsRiver localConstraintsRiver = new LocalConstraintsRiver();
-        if (localConstraintsRiver.MakeAction(segment, river, riverWidth))
-        {
-            if (segment.metadata.highway)
-            {
-                Debug.Log("xd");
-                MakeSegmentOnScene(segment);
-            }
-            return false;
-        }
-
         // Check collision around segment
         Vector3 pos3d = segment.CalculatePhysicsShapeTransform().position;
         List<Segment> colliders = PhysicObjects.OverlapCircleSegments(new Vector2(pos3d.x, pos3d.z),
@@ -188,7 +181,9 @@ public class RoadGen : MonoBehaviour
         {
             return action.MakeAction(segment, segments);
         }
-
+        /*
+return !checkIfCollisionOrCrossingRiver(segment);
+*/
         return true;
     }
 
@@ -262,19 +257,72 @@ public class RoadGen : MonoBehaviour
         } 
 
         // filter branches that extend beyond the boundaries of the area
-        var newBranchesFiltered = newBranches.Where(b => { 
+        var newBranchesFilteredBoundries = newBranches.Where(b => { 
             return b.start.x >= minCorner.x && b.start.x < maxCorner.x &&
                     b.start.y >= minCorner.y && b.start.y < maxCorner.y &&
                 b.end.x >= minCorner.x && b.end.x < maxCorner.x &&
                     b.end.y >= minCorner.y && b.end.y < maxCorner.y;
-        });
+        }).ToList();
         
-        foreach (var branch in newBranchesFiltered)
+        List<Segment> newBranchesFilteredRiver = new List<Segment>();
+        for (int i=0; i < newBranchesFilteredBoundries.Count() ;i++)
+        {
+            var branch = newBranchesFilteredBoundries[i];
+            if (!checkIfCollisionOrCrossingRiver(branch))
+            {
+                newBranchesFilteredRiver.Add(branch);
+            }
+        }
+        
+
+        foreach (var branch in newBranchesFilteredRiver)
         {
             branch.previousSegmentToLink = previousSegment;
         }
 
-        return newBranchesFiltered.ToList();
+        return newBranchesFilteredRiver;
+    }
+
+    private bool checkIfCollisionOrCrossingRiver(Segment segment)
+    {
+        Vector3 rayOrigin = new float3(segment.end.x, -1f, segment.end.y);
+        Ray ray = new Ray(rayOrigin, Vector3.up);
+        float3 pointOnSpline;
+        float interpolation;
+        float distance = SplineUtility.GetNearestPoint<Spline>(river, ray, out pointOnSpline, out interpolation, SplineUtility.PickResolutionMin);
+        if (distance < riverWidth * 1.6)
+        {
+            if (segment.metadata.highway)
+            {
+                Vector2 orginalDirection = segment.end - segment.start;
+                Vector2 normalizedDirection = orginalDirection.normalized;
+                Debug.Log("XD1 norm:" + normalizedDirection);
+                Vector2 offset = normalizedDirection * (distance + (riverWidth * 20f));
+                Debug.Log("XD1 start:" + segment.end);
+                segment.end = segment.end + offset;
+                Debug.Log("XD1 offset:"+ offset);
+                Debug.Log("XD1 end:" + segment.end);
+                MakeSegmentOnScene(segment);
+                return false;
+            }
+            return true;
+        }
+        return actionWhenRoadCrossesRiver(pointOnSpline, segment);
+    }
+
+    private bool actionWhenRoadCrossesRiver(float3 point, Segment segment)
+    {
+        float differenceStartX = point.x - segment.start.x;
+        float differenceEndX = point.x - segment.end.x;
+        if (differenceEndX * differenceStartX < 0)
+        {
+            return !segment.metadata.highway;
+        }
+        if(differenceStartX ==0 && differenceEndX == 0)
+        {
+            return true;
+        }
+        return false;
     }
 
     private Segment SegmentContinue(Segment previousSegment, float direction) {

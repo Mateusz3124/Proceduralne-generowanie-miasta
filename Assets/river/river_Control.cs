@@ -118,7 +118,7 @@ public class river_Control : MonoBehaviour
 
             tilesValuesForFlatten.Add(new int2(tileX, tileZ));
 
-            float heightTerrain = proceduralTerrain.getHeight(pointOnSpline.x, pointOnSpline.z);
+            float heightTerrain = proceduralTerrain.getHeight(pointOnSpline.x, pointOnSpline.z) -4f;
             heightTerrain -= heightTerrain * 0.2f;
             if (heightTerrain < 0.3f)
             {
