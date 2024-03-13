@@ -89,10 +89,11 @@ public class ProceduralTerrain : MonoBehaviour
         mesh.RecalculateNormals();
         mesh.RecalculateTangents();
     }
+
     public float getHeight(float x, float y)
     {
         FastNoiseLite noise = new FastNoiseLite();
-        noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2);
+        noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2S);
         return noise.GetNoise(x * noise_scale + noise_offset, y * noise_scale + noise_offset) * height;
     }
 
