@@ -87,8 +87,6 @@ public class RoadGen : MonoBehaviour
         Segment oppositeDirectionSegment = new Segment(
             maxNoisePos, new Vector2(maxNoisePos.x - HIGHWAY_SEGMENT_LENGTH, maxNoisePos.y),
             0, new SegmentMetadata { highway = true });
-        MakeSegmentOnScene(mainSegment);
-        MakeSegmentOnScene(oppositeDirectionSegment);
         oppositeDirectionSegment.linksB.Add(mainSegment);
         mainSegment.linksB.Add(oppositeDirectionSegment);
         priorityQueue.Push(mainSegment, mainSegment.t);
@@ -297,16 +295,7 @@ public class RoadGen : MonoBehaviour
         float distance;
         (distance, pointOnSpline) = river.ifRiver(segment.end.x,segment.end.y);
         if (distance < river.riverWidth * 1.6)
-        {
-            if (segment.metadata.highway)
-            {
-                Vector2 orginalDirection = segment.end - segment.start;
-                Vector2 normalizedDirection = orginalDirection.normalized;
-                Vector2 offset = normalizedDirection * (distance + (river.riverWidth * 20f));
-                segment.end = segment.end + offset;
-                MakeSegmentOnScene(segment);
-                return false;
-            }
+        {  
             return true;
         }
         return actionWhenRoadCrossesRiver(pointOnSpline, segment);
