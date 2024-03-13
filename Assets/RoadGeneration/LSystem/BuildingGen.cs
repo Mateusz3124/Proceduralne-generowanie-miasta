@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Unity.Mathematics;
 
 public class BuildingGen
 {
@@ -9,12 +10,16 @@ public class BuildingGen
     const int BUILDINGS_PER_SEGMENT = 5;
     const float MAX_BUILDING_DISTANCE_FROM_SEGMENT = 200.0f;
     const float DISTANCE_TO_MOVE_IN_PLACING_ATTEMPT = 30f;
+    const float DISTANCE_TO_MOVE_WHEN_RIVER = 30f;
     const float MAX_PLACEMENT_ATTEMPTS = 20;
     const float DEFAULT_BUILDING_HEIGHT = 70f;
     const float DEFAULT_BUILDING_WIDTH = 70f;
 
     public static Vector2 minCorner {get; set;} = new Vector2(0f, 0f);
     public static Vector2 maxCorner {get; set;} = new Vector2(512f, 512f);
+
+    [HideInInspector]
+    public river_Control river;
 
     // only for visualisation and testing
     // else dont use
@@ -23,7 +28,7 @@ public class BuildingGen
         foreach(var b in buildings) {
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
             cube.transform.parent = Control.global_transform;
-            cube.transform.localScale = new Vector3(b.width, Random.Range(20f, 100f), b.height);
+            cube.transform.localScale = new Vector3(b.width, UnityEngine.Random.Range(20f, 100f), b.height);
             cube.transform.rotation = Quaternion.Euler(0f, b.direction, 0f);
             cube.transform.position = new Vector3(b.center.x, 100f, b.center.y);
         }
@@ -42,10 +47,10 @@ public class BuildingGen
             // make BUILDINGS_PER_SEGMENT buildings
             for (int j = 0; j < BUILDINGS_PER_SEGMENT; j++)
             {
-                float randomAngle = Random.Range(0.0f, 360.0f);
-                float randomDistance = Random.Range(0.0f, MAX_BUILDING_DISTANCE_FROM_SEGMENT);
-                float randomHeight = DEFAULT_BUILDING_HEIGHT + Random.Range(-20f, 20f);
-                float randomWidth = DEFAULT_BUILDING_WIDTH + Random.Range(-20f, 20f);
+                float randomAngle = UnityEngine.Random.Range(0.0f, 360.0f);
+                float randomDistance = UnityEngine.Random.Range(0.0f, MAX_BUILDING_DISTANCE_FROM_SEGMENT);
+                float randomHeight = DEFAULT_BUILDING_HEIGHT + UnityEngine.Random.Range(-20f, 20f);
+                float randomWidth = DEFAULT_BUILDING_WIDTH + UnityEngine.Random.Range(-20f, 20f);
 
                 Vector2 center = (segment.start + segment.end) * 0.5f;
                 center.x += randomDistance * Mathf.Sin(Mathf.Deg2Rad * randomAngle);
@@ -75,6 +80,15 @@ public class BuildingGen
                         }
                     }
                     else {
+                        float distance;
+                        float3 point;
+                        (distance, point) = river.ifRiver(building.center.x, building.center.y);
+                        if(distance < 1.6* river.riverWidth)
+                        {
+                            Vector2 pointCollision= new Vector2(point.x, point.z);
+                            building.center += (building.center - pointCollision).normalized * DISTANCE_TO_MOVE_WHEN_RIVER;
+                            continue;
+                        }
                         allowBuilding = true;
                         break;
                     }

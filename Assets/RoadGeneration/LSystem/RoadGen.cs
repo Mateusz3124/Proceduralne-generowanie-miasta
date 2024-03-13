@@ -29,13 +29,11 @@ public class RoadGen : MonoBehaviour
     const int NORMAL_BRANCH_TIME_DELAY_FROM_HIGHWAY = 5;
     const int DEFAULT_SEGMENT_LENGTH = 300;
     [HideInInspector]
-    public Spline river;
+    public river_Control river;
     // borders to lsystem
     // has default values but its better to set manually
     public static Vector2 minCorner {get; set;} = new Vector2(0f, 0f);
     public static Vector2 maxCorner {get; set;} = new Vector2(512f, 512f);
-    [HideInInspector]
-    public int riverWidth = 0;
 
     void Start() 
     {
@@ -181,9 +179,6 @@ public class RoadGen : MonoBehaviour
         {
             return action.MakeAction(segment, segments);
         }
-        /*
-return !checkIfCollisionOrCrossingRiver(segment);
-*/
         return true;
     }
 
@@ -268,7 +263,7 @@ return !checkIfCollisionOrCrossingRiver(segment);
         for (int i=0; i < newBranchesFilteredBoundries.Count() ;i++)
         {
             var branch = newBranchesFilteredBoundries[i];
-            if (true) //!checkIfCollisionOrCrossingRiver(branch)
+            if (!checkIfCollisionOrCrossingRiver(branch))
             {
                 newBranchesFilteredRiver.Add(branch);
             }
@@ -285,23 +280,17 @@ return !checkIfCollisionOrCrossingRiver(segment);
 
     private bool checkIfCollisionOrCrossingRiver(Segment segment)
     {
-        Vector3 rayOrigin = new float3(segment.end.x, -1f, segment.end.y);
-        Ray ray = new Ray(rayOrigin, Vector3.up);
         float3 pointOnSpline;
-        float interpolation;
-        float distance = SplineUtility.GetNearestPoint<Spline>(river, ray, out pointOnSpline, out interpolation, SplineUtility.PickResolutionMin);
-        if (distance < riverWidth * 1.6)
+        float distance;
+        (distance, pointOnSpline) = river.ifRiver(segment.end.x,segment.end.y);
+        if (distance < river.riverWidth * 1.6)
         {
             if (segment.metadata.highway)
             {
                 Vector2 orginalDirection = segment.end - segment.start;
                 Vector2 normalizedDirection = orginalDirection.normalized;
-                Debug.Log("XD1 norm:" + normalizedDirection);
-                Vector2 offset = normalizedDirection * (distance + (riverWidth * 20f));
-                Debug.Log("XD1 start:" + segment.end);
+                Vector2 offset = normalizedDirection * (distance + (river.riverWidth * 20f));
                 segment.end = segment.end + offset;
-                Debug.Log("XD1 offset:"+ offset);
-                Debug.Log("XD1 end:" + segment.end);
                 MakeSegmentOnScene(segment);
                 return false;
             }

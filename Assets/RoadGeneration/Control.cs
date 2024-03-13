@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Jobs;
+using Unity.Mathematics;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Splines;
@@ -24,22 +25,31 @@ public class Control : MonoBehaviour
         global_transform = transform_object.transform;
         global_transform.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
         transform.parent = global_transform;
-        Debug.Log("xd: " + Time.realtimeSinceStartup);
         proceduralTerrain = GetComponent<ProceduralTerrain>();
         proceduralTerrain.Generate();
-        Debug.Log(Time.realtimeSinceStartup);
+
+        river_Control river = GetComponent<river_Control>();
+        river.riverWidth = riverWidth;
+        river._proceduralTerrain = proceduralTerrain;
+        HashSet<int2> riverData = river.createRandomRiver();
 
         RoadGen roadGen = GetComponent<RoadGen>();
         RoadGen.minCorner = proceduralTerrain.GetMinCorner();
         RoadGen.maxCorner = proceduralTerrain.GetMaxCorner();
-        
+        roadGen.river = river;
+        List<Segment> segmentList = roadGen.GenerateSegments(Vector2.zero);
+
+        CreateRegion regions = new CreateRegion();
+        regions.createRegions(proceduralTerrain, segmentList);
+
         splineCreation splines = GetComponent<splineCreation>();
-        splines.createSplines(proceduralTerrain, roadGen);
+        splines.createSplines(proceduralTerrain, segmentList);
         sm.CreateMesh(GetComponent<SplineContainer>(), global_transform);
 
         BuildingGen buildingGen = new BuildingGen();
         BuildingGen.minCorner = proceduralTerrain.GetMinCorner();
         BuildingGen.maxCorner = proceduralTerrain.GetMaxCorner();
+        buildingGen.river = river;
         buildingGen.makeBuildingsOnScene();
     }
     

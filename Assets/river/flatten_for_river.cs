@@ -9,7 +9,6 @@ using TreeEditor;
 
 public class flatten_for_river : MonoBehaviour
 {
-    /*
     //"Optional shaped ramp around perimeter."
     public AnimationCurve PerimeterRampCurve = AnimationCurve.Linear(0, 0, 1, 1);
 
@@ -246,5 +245,4 @@ public class flatten_for_river : MonoBehaviour
     {
 
     }
-    */
 }
