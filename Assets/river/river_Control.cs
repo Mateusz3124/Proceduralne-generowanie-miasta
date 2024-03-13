@@ -85,9 +85,9 @@ public class river_Control : MonoBehaviour
         float length = splineContainer.CalculateLength();
         List<float3> listForAccurateSpline = new List<float3>();
 
-        for (int i = 0; i < length; i+=10)
+        for (int i = 0; i < length; i+=200)
         {
-            float3 pointOnSpline = SplineUtility.GetPointAtLinearDistance<Spline>(splineTemporary, resultPoint, 10f, out resultPoint);
+            float3 pointOnSpline = SplineUtility.GetPointAtLinearDistance<Spline>(splineTemporary, resultPoint, 200f, out resultPoint);
             int tileX = (int)Mathf.Floor(pointOnSpline.x / xOffset);
             int tileZ = (int)Mathf.Floor(pointOnSpline.z / height);
 
