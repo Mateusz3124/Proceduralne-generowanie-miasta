@@ -260,7 +260,7 @@ public class RoadGen : MonoBehaviour
         var newBranchesFiltered = newBranches.Where(b => {
             return (CheckIfPointInRange(b.start, minCorner, maxCorner) &&
                     CheckIfPointInRange(b.end, minCorner, maxCorner) ||
-                    b.metadata.highway) && !checkIfCollisionOrCrossingRiver(branch);
+                    b.metadata.highway) && !checkIfCollisionOrCrossingRiver(b);
         });
 
         // make extending highways stick to border
@@ -288,7 +288,7 @@ public class RoadGen : MonoBehaviour
             branch.previousSegmentToLink = previousSegment;
         }
 
-        return newBranchesFiltered;
+        return newBranchesFiltered.ToList();
     }
 
     private bool checkIfCollisionOrCrossingRiver(Segment segment)
