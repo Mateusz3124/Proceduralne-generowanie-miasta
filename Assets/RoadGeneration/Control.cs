@@ -51,6 +51,13 @@ public class Control : MonoBehaviour
         BuildingGen.maxCorner = proceduralTerrain.GetMaxCorner();
         buildingGen.river = river;
         buildingGen.makeBuildingsOnScene();
+
+        // TestPopulation.end = RoadGen.maxCorner;
+        // TestPopulation.makePopulationGrid(roadGen);
+    }
+    
+    void Update() {
+        
     }
     
 }
