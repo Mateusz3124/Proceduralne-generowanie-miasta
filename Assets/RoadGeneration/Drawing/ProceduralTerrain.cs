@@ -16,9 +16,8 @@ struct NoiseJob : IJobParallelFor {
     public float offset;
     public float noise_offset;
     public NativeArray<Vector3> heights;
-
+    static FastNoiseLite noise = new FastNoiseLite();
     public void Execute(int i) {
-        FastNoiseLite noise = new FastNoiseLite();
         noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2);
         var xpos = (i % row_length) * scale + offset;
         var ypos = (i / row_length) * scale + offset;
@@ -48,23 +47,28 @@ public class ProceduralTerrain : MonoBehaviour {
             heights = heights
         };
         var handle = job.Schedule(heights.Length, batch_size);
+
+
+        int[] inds = new int[(resolution-1)*(resolution-1)*6];
+        uint idx = 0;
+        for (int i = 0; i < resolution - 1; ++i) {
+            for (int j = 0; j < resolution - 1; ++j) {
+                int currentIndex = i * resolution + j;
+                inds[idx + 0] = currentIndex + 1;
+                inds[idx + 1] = currentIndex;
+                inds[idx + 2] = currentIndex + resolution;
+                inds[idx + 3] = currentIndex + 1;
+                inds[idx + 4] = currentIndex + resolution;
+                inds[idx + 5] = currentIndex + resolution + 1;
+                idx += 6;
+            }
+        }
+
         handle.Complete();
 
         Vector2[] uvs = new Vector2[resolution*resolution];
         for(int i=0; i<heights.Length; ++i) {
             uvs[i] = new Vector2(heights[i].x, heights[i].z);
-        }
-        List<int> inds = new List<int>();
-        for (int i = 0; i < resolution - 1; ++i) {
-            for (int j = 0; j < resolution - 1; ++j) {
-                int currentIndex = i * resolution + j;
-                inds.Add(currentIndex + 1);
-                inds.Add(currentIndex);
-                inds.Add(currentIndex + resolution);
-                inds.Add(currentIndex + 1);
-                inds.Add(currentIndex + resolution);
-                inds.Add(currentIndex + resolution + 1);
-            }
         }
 
         Mesh mesh = new Mesh();
@@ -79,6 +83,7 @@ public class ProceduralTerrain : MonoBehaviour {
         heights.Dispose();
         mesh.uv = uvs.ToArray();
         mesh.RecalculateNormals();
+        mesh.RecalculateTangents();
     }
     public float getHeight(float x, float y) {
         FastNoiseLite noise = new FastNoiseLite();
