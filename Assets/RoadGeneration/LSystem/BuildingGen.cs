@@ -82,7 +82,13 @@ public class BuildingGen
                     else {
                         float distance;
                         float3 point;
-                        (distance, point) = river.ifRiver(building.center.x, building.center.y);
+                        bool ifInsideSquares;
+                        (distance, point, ifInsideSquares) = river.ifRiver(building.center.x, building.center.y);
+                        if (!ifInsideSquares)
+                        {
+                            allowBuilding = true;
+                            break;
+                        }
                         if(distance < 1.6* river.riverWidth)
                         {
                             break;

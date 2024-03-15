@@ -293,7 +293,9 @@ public class RoadGen : MonoBehaviour
     {
         float3 pointOnSpline;
         float distance;
-        (distance, pointOnSpline) = river.ifRiver(segment.end.x,segment.end.y);
+        bool ifInsideSquare;
+        (distance, pointOnSpline, ifInsideSquare) = river.ifRiver(segment.end.x,segment.end.y);
+        if(!ifInsideSquare) return false;
         if (distance < river.riverWidth * 1.6)
         {  
             return true;

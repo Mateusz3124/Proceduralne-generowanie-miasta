@@ -31,7 +31,7 @@ public class Control : MonoBehaviour
         river_Control river = GetComponent<river_Control>();
         river.riverWidth = riverWidth;
         river._proceduralTerrain = proceduralTerrain;
-        HashSet<int2> riverData = river.createRandomRiver();
+        river.createRandomRiver();
 
         RoadGen roadGen = GetComponent<RoadGen>();
         RoadGen.minCorner = proceduralTerrain.GetMinCorner();
