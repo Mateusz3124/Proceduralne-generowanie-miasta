@@ -20,10 +20,15 @@ public class BuildingGen
 
     [HideInInspector]
     public river_Control river;
+    private CreateRegion regions;
+
+    public BuildingGen(CreateRegion regions) {
+        this.regions = regions;
+    }
 
     // only for visualisation and testing
     // else dont use
-    public void makeBuildingsOnScene() { 
+    public void makeBuildingsOnScene(CreateRegion regions) { 
         List<Building> buildings = GenerateBuildings();
         foreach(var b in buildings) {
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -31,6 +36,11 @@ public class BuildingGen
             cube.transform.localScale = new Vector3(b.width, UnityEngine.Random.Range(20f, 100f), b.height);
             cube.transform.rotation = Quaternion.Euler(0f, b.direction, 0f);
             cube.transform.position = new Vector3(b.center.x, 100f, b.center.y);
+
+            if(PhysicObjects.pois.Contains(b)) {
+                var renderer = cube.GetComponent<Renderer>();
+                renderer.material.color = Color.red;
+            }
         }
     }
 
@@ -98,17 +108,87 @@ public class BuildingGen
                     }
                 }
                 
-                if(allowBuilding && buildingWithinLimits(building)) {
+                if(allowBuilding && BuildingWithinLimits(building)) {
                     building.MakeCollider();
                     buildings.Add(building);
                 }
             }
         }
 
+        GeneratePois(buildings);
+
         return buildings;
     }
 
-    private bool buildingWithinLimits(Building building) {
+    private void GeneratePois(List<Building> buildings) {
+        int buildingsCount = buildings.Count;
+        int number_of_pois = (int)(buildingsCount * 0.03f);
+
+        int nOfgeneratedPOIs = 0;
+        while(nOfgeneratedPOIs != number_of_pois) {
+            int randIndex = UnityEngine.Random.Range(0, buildingsCount);
+            var building = buildings[randIndex];
+            if(PhysicObjects.pois.Contains(building))
+                continue;
+
+            building.type = GetPoiType(building);
+            PhysicObjects.pois.Add(building);
+            nOfgeneratedPOIs++;
+        }
+
+        foreach(var b in PhysicObjects.pois) {
+            Debug.Log(b.type);
+        }
+    }
+
+    private BuildingType GetPoiType(Building building) {
+        var regionType = regions.getRegion(building.center.x, building.center.y);
+        var randValue = UnityEngine.Random.Range(0, 4);
+        switch(regionType) {
+            case CreateRegion.RegionType.skyscrapers:
+                if(randValue <= 1)
+                    return BuildingType.businessHub;
+                else
+                    return BuildingType.skyscraper;
+
+            case CreateRegion.RegionType.highBuildings:
+                if(randValue == 0)
+                    return BuildingType.church;
+                else if(randValue == 1)
+                    return BuildingType.businessHub;
+                else if(randValue == 2)
+                    return BuildingType.gallery;
+                else
+                    return BuildingType.university;
+            
+            case CreateRegion.RegionType.lowBuildings:
+                if(randValue == 0)
+                    return BuildingType.university;
+                else if(randValue == 1)
+                    return BuildingType.cinema;
+                else if(randValue == 2)
+                    return BuildingType.gallery;
+                else
+                    return BuildingType.restaurant;
+
+            case CreateRegion.RegionType.outskirts:
+                if(randValue <= 1)
+                    return BuildingType.sportsField;
+                else
+                    return BuildingType.park;
+
+            case CreateRegion.RegionType.noroads:
+                if(randValue <= 1)
+                    return BuildingType.sportsField;
+                else
+                    return BuildingType.park;
+        }
+
+        return BuildingType.normal;
+    }
+
+
+    private bool BuildingWithinLimits(Building building) {
         if(building.center.x > minCorner.x && building.center.x < maxCorner.x &&
             building.center.y > minCorner.y && building.center.y < maxCorner.y) {
             return true;

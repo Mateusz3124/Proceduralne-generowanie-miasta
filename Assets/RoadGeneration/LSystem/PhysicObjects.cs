@@ -7,6 +7,7 @@ public class PhysicObjects
 {
     public static HashSet<Segment> segmentsColliders = new HashSet<Segment>();
     public static HashSet<Building> buildingsColliders = new HashSet<Building>();
+    public static HashSet<Building> pois = new HashSet<Building>(); // points of interest
     
     // s1, s2 - start and end (or end and start) of segment
     public static Vector2 GetClosestPointOnSegment(Vector2 point, Vector2 s1, Vector2 s2)
