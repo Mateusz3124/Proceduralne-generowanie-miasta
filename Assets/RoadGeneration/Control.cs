@@ -39,6 +39,8 @@ public class Control : MonoBehaviour
         roadGen.river = river;
         List<Segment> segmentList = roadGen.GenerateSegments(Vector2.zero);
 
+        proceduralTerrain.GeneratePopulationTexture(segmentList);
+
         CreateRegion regions = new CreateRegion();
         regions.createRegions(proceduralTerrain, segmentList);
 

@@ -489,11 +489,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   batch_size: 16
   size: 10260
-  height: 100
+  height: 300
   resolution: 2048
   noise_scale: 0.05
+  population_texture_resolution: 512
   noise_offset: 0
   terrain_material: {fileID: 2100000, guid: 9a5189412171b4e46bc6e961a9691221, type: 2}
+  population_texture: {fileID: 0}
 --- !u!114 &1789418048
 MonoBehaviour:
   m_ObjectHideFlags: 0
