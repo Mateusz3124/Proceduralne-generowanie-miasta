@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -39,6 +40,12 @@ public class SplineMesh : MonoBehaviour
                 var bitan = Vector3.Normalize(Vector3.Cross(Vector3.up, tan)) * road_width * 0.5f;
                 var p1 = pos - new float3(bitan);
                 var p2 = pos + new float3(bitan);
+                const float BIAS = 0.1f;
+                var h0 = terrain.getHeight(pos) + BIAS;
+                var h1 = Math.Max(h0, terrain.getHeight(p1)) + BIAS;
+                var h2 = Math.Max(h0, terrain.getHeight(p2)) + BIAS;
+                p1.y = h1;
+                p2.y = h2;
                 vertices.Add(p1);
                 vertices.Add(p2);
             }
@@ -119,6 +126,7 @@ public class SplineMesh : MonoBehaviour
     [SerializeField] float road_height = 0.5f;
     [SerializeField] uint road_segments = 10;
     [SerializeField] Material material;
+    [SerializeField] ProceduralTerrain terrain;
 
     static List<GameObject> meshes = new List<GameObject>();
 }

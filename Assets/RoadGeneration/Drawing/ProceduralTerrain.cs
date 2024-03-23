@@ -21,7 +21,9 @@ struct NoiseJob : IJobParallelFor
     public void Execute(int i) {
         var xpos = (i % row_length) * scale + offset;
         var ypos = (i / row_length) * scale + offset;
-        heights[i] = new Vector3(xpos, noise.GetNoise(xpos * noise_scale + noise_offset, ypos * noise_scale + noise_offset) * noise_height, ypos);
+        var noise_x = (xpos + noise_offset) * noise_scale;
+        var noise_y = (ypos + noise_offset) * noise_scale;
+        heights[i] = new Vector3(xpos, noise.GetNoise(noise_x, noise_y) * noise_height, ypos);
     }
 };
 
@@ -39,7 +41,7 @@ public class ProceduralTerrain : MonoBehaviour
     {
         noise_offset = UnityEngine.Random.Range(-1.0f, 1.0f) * resolution * size;
         var heights = new NativeArray<Vector3>(resolution * resolution, Allocator.TempJob);
-        NoiseJob.noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2S);
+        NoiseJob.noise.SetNoiseType(FastNoiseLite.NoiseType.Perlin);
         NoiseJob job = new NoiseJob{
             row_length = resolution,
             scale = (float)size / (float)(resolution - 1),
@@ -70,14 +72,16 @@ public class ProceduralTerrain : MonoBehaviour
         handle.Complete();
 
         Vector2[] uvs = new Vector2[resolution * resolution];
+        float inv_res = 1.0f / (float)resolution;
         for (int i = 0; i < heights.Length; ++i)
         {
-            uvs[i] = new Vector2(heights[i].x, heights[i].z);
+            uvs[i] = new Vector2((i % resolution) * inv_res, i * (inv_res * inv_res));
         }
 
         Mesh mesh = new Mesh();
         gameObject.AddComponent<MeshRenderer>();
         gameObject.GetComponent<MeshRenderer>().material = terrain_material;
+        gameObject.GetComponent<MeshRenderer>().material.SetFloat("", 1.0f);
         gameObject.AddComponent<MeshFilter>();
         var filter = GetComponent<MeshFilter>();
         filter.mesh = mesh;
@@ -92,9 +96,7 @@ public class ProceduralTerrain : MonoBehaviour
 
     public float getHeight(float x, float y)
     {
-        FastNoiseLite noise = new FastNoiseLite();
-        noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2S);
-        return noise.GetNoise(x * noise_scale + noise_offset, y * noise_scale + noise_offset) * height;
+        return NoiseJob.noise.GetNoise((x + noise_offset) * noise_scale, (y + noise_offset) * noise_scale) * height;
     }
 
     public float getHeight(Vector3 pos)
