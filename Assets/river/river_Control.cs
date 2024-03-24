@@ -12,9 +12,63 @@ using UnityEditor.Presets;
 using System.Runtime.InteropServices.WindowsRuntime;
 using UnityEngine.UIElements;
 using static UnityEngine.Rendering.HableCurve;
+using static river_Control;
+using System.Buffers.Text;
+using static UnityEngine.Rendering.DebugUI;
 
 public class river_Control : MonoBehaviour
 {
+    public class Square
+    {
+        public float left;
+        public float top;
+        public float right;
+        public float bottom;
+        public Square(float left, float top, float right, float bottom)
+        {
+            this.left = left;
+            this.top = top;
+            this.right = right;
+            this.bottom = bottom;  
+        }
+    }
+    public class Squares
+    {
+        public List<Square> squares = new List<Square>();
+
+        public void add(float3 start, float3 end)
+        {
+            float distanceZ = end.z - start.z;
+            float distanceX = end.x - start.x;
+
+            float middleZ = start.z + distanceZ / 2;
+            float middleX = start.x + distanceX / 2;
+            float left = start.x + distanceX / 2 - distanceZ / 2;
+            float right = start.x + distanceX / 2 + distanceZ / 2;
+
+            Square square = new Square(left, end.z, right, start.z);
+            squares.Add(square);
+        }
+
+        public bool checkIfInside(float x, float z)
+        {
+            bool result = false;
+            foreach (var item in squares)
+            {
+                if (item.left < x && x < item.right)
+                {
+                    if(item.bottom < z && z < item.top)
+                    {
+                        result = true;
+                    }
+                }
+            }
+            return result;
+        }
+    }
+
+    Squares squares = new Squares();
+
     // Start is called before the first frame update
     void Start()
     {
@@ -43,7 +97,7 @@ public class river_Control : MonoBehaviour
     public int riverWidth;
 
     public Spline spline;
-    float checkForRiver(int x, int z)
+    float checkForRiver(float x, float z)
     {
         RaycastHit hit;
         int layerMask = 1 << 4;
@@ -59,7 +113,8 @@ public class river_Control : MonoBehaviour
         }
         return -1f;
     }
-    public HashSet<int2> createRandomRiver()
+
+    public void createRandomRiver()
     {
         SplineContainer splineContainer = river.GetComponent<SplineContainer>();
         Spline splineTemporary = splineContainer.AddSpline();
@@ -68,9 +123,8 @@ public class river_Control : MonoBehaviour
 
         List<float3> listForSplineTemporary = new List<float3>();
         
-        HashSet<int2> tilesValuesForFlatten = new HashSet<int2>();
         xOffset = proceduralTerrain.size / 20;
-        for (int z = (int)proceduralTerrain.GetMinCorner().y; z <= proceduralTerrain.GetMaxCorner().y; z += gap)
+        for (float z = proceduralTerrain.GetMinCorner().y; z <= proceduralTerrain.GetMaxCorner().y; z += gap)
         {
             float rand = UnityEngine.Random.Range(0f, 1f);
             if (rand < 0.2f && startX+xOffset < proceduralTerrain.GetMaxCorner().x) startX += xOffset;
@@ -84,14 +138,13 @@ public class river_Control : MonoBehaviour
         float resultPoint = 0f;
         float length = splineContainer.CalculateLength();
         List<float3> listForAccurateSpline = new List<float3>();
+        float3 firstKnot = splineTemporary.ToArray()[0].Position;
+        float firstheightTerrain = proceduralTerrain.getHeight(firstKnot.x, firstKnot.z) - 4f;
+        listForAccurateSpline.Add(new float3(firstKnot.x, firstheightTerrain, firstKnot.z));
 
-        for (int i = 0; i < length; i+=10)
+        for (int i = 0; i < length; i+=200)
         {
-            float3 pointOnSpline = SplineUtility.GetPointAtLinearDistance<Spline>(splineTemporary, resultPoint, 10f, out resultPoint);
-            int tileX = (int)Mathf.Floor(pointOnSpline.x / xOffset);
-            int tileZ = (int)Mathf.Floor(pointOnSpline.z / height);
-
-            tilesValuesForFlatten.Add(new int2(tileX, tileZ));
+            float3 pointOnSpline = SplineUtility.GetPointAtLinearDistance<Spline>(splineTemporary, resultPoint, 200f, out resultPoint);
 
             float heightTerrain = proceduralTerrain.getHeight(pointOnSpline.x, pointOnSpline.z) -4f;
             heightTerrain -= heightTerrain * 0.2f;
@@ -107,46 +160,65 @@ public class river_Control : MonoBehaviour
         spline.SetTangentMode(TangentMode.AutoSmooth);
         splineContainer.RemoveSpline(splineTemporary);
 
+        for(int i=0; i < 10; i++)
+        {
+            float ratioStart = i / 10f;
+            float ratioEnd = (i+1) / 10f;
+            float3 pointOnSplineStart = spline.EvaluatePosition(ratioStart);
+            float3 pointOnSplineEnd = spline.EvaluatePosition(ratioEnd);
+            squares.add(pointOnSplineStart, pointOnSplineEnd);
+        }
+
         river_mesh river_Mesh = river.GetComponent<river_mesh>();
         river_Mesh.CreateMesh(spline, riverWidth);
-        return tilesValuesForFlatten;
+        return;
     }
 
-    public void riverToTerrain(HashSet<int2> tiles)
+    public void riverToTerrain()
     {
         flatten_for_river flatten = GetComponent<flatten_for_river>();
         flatten.PerimeterRampDistance = riverWidth/2;
         List<Point> list = new List<Point>();
-        foreach(int2 value in tiles)
+        List<Square> localSquares = squares.squares;
+        float resolutionDistance = proceduralTerrain.size / proceduralTerrain.resolution;
+        foreach(Square square in localSquares)
         {
             list.Clear();
-            int baseX = value.x * (int)xOffset;
-            int baseZ = value.y * height;
-            for (int x = 0; x< xOffset; x++)
+            int startX = (int)Mathf.Floor(square.left / resolutionDistance);
+            int endX = (int)Mathf.Floor(square.right / resolutionDistance);
+            int startZ = (int)Mathf.Floor(square.bottom / resolutionDistance);
+            int endZ = (int)Mathf.Floor(square.top / resolutionDistance);
+            var filter = GetComponent<MeshFilter>();
+            Vector3[] verticies = filter.mesh.vertices;
+            for (int x = startX; x <= endX; x++)
             {
-                for(int z = 0; z < height; z++)
+                for(int z = startZ; z <= endZ; z++)
                 {
-                    float height = (checkForRiver(baseX + x, baseZ + z)-0.1f);
-                    if(height > 0f)
+                    float height = (checkForRiver(x* resolutionDistance,z * resolutionDistance) - 0.1f);
+                    if (height > 0f)
                     {
-                        Point point = new Point(new int2(x,z));
+                        Point point = new Point(new int2(x, z));
                         point.height = height;
                         list.Add(point);
                     }
                 }
             }
-            flatten.changeTerrain(terrains[value.x, value.y], list);
-        }
+
+            flatten.changeTerrain(terrains[1, 1], list);
+        } 
 
     }
-    public (float,float3) ifRiver(float x, float y)
+    public (float,float3, bool) ifRiver(float x, float y)
     {
+        if (!squares.checkIfInside(x, y)){
+            return (0f, new float3(0f,0f,0f), false);
+        }
         Vector3 rayOrigin = new float3(x, -1f, y);
         Ray ray = new Ray(rayOrigin, Vector3.up);
         float3 pointOnSpline;
         float interpolation;
         float distance = SplineUtility.GetNearestPoint<Spline>(spline, ray, out pointOnSpline, out interpolation, SplineUtility.PickResolutionMin);
-        return (distance,pointOnSpline);
+        return (distance,pointOnSpline, true);
     }
 
 }

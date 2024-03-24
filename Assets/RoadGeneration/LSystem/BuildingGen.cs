@@ -82,12 +82,16 @@ public class BuildingGen
                     else {
                         float distance;
                         float3 point;
-                        (distance, point) = river.ifRiver(building.center.x, building.center.y);
+                        bool ifInsideSquares;
+                        (distance, point, ifInsideSquares) = river.ifRiver(building.center.x, building.center.y);
+                        if (!ifInsideSquares)
+                        {
+                            allowBuilding = true;
+                            break;
+                        }
                         if(distance < 1.6* river.riverWidth)
                         {
-                            Vector2 pointCollision= new Vector2(point.x, point.z);
-                            building.center += (building.center - pointCollision).normalized * DISTANCE_TO_MOVE_WHEN_RIVER;
-                            continue;
+                            break;
                         }
                         allowBuilding = true;
                         break;

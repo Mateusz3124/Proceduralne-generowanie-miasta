@@ -35,7 +35,8 @@ public class LocalConstraintsIntersectionAction : Actions {
         segment.end = intersection;
         segment.metadata.severed = true;
 
-        return true;
+        // prevent segments that has length < 1f
+        return segment.length > 1f;
     }
 }
 
