@@ -28,6 +28,36 @@ struct NoiseJob : IJobParallelFor
     }
 };
 
+struct PopulationTextureJobSegment
+{
+    public float2 midpoint;
+};
+
+struct PopulationTextureJob : IJobParallelFor
+{
+    public NativeArray<float> distances;
+    [ReadOnly] public NativeArray<PopulationTextureJobSegment> segments;
+    public Vector2 min_corner;
+    public float2 step;
+    public int resolution;
+    public void Execute(int i)
+    {
+        float2 dist = new float2(
+            (float)(i % resolution),
+            (float)i / (float)resolution
+        );
+        float2 world_pos = (float2)min_corner + step * dist;
+
+        float min_dist = float.MaxValue;
+        foreach (var s in segments)
+        {
+            var mid = s.midpoint;
+            min_dist = Math.Min(min_dist, Mathf.Pow(world_pos.x - mid.x, 2.0f) + Mathf.Pow(world_pos.y - mid.y, 2.0f));
+        }
+        distances[i] = min_dist;
+    }
+};
+
 public class ProceduralTerrain : MonoBehaviour
 {
     public int batch_size = 8;
@@ -39,6 +69,9 @@ public class ProceduralTerrain : MonoBehaviour
     [HideInInspector] public float noise_offset = 0.0f;
     public Material terrain_material;
     public Texture2D population_texture;
+    private NativeArray<float> population_distances;
+    private NativeArray<PopulationTextureJobSegment> population_segments;
+    private JobHandle population_job_handle;
     public void Start() { }
     public void Generate()
     {
@@ -104,33 +137,45 @@ public class ProceduralTerrain : MonoBehaviour
         mesh.RecalculateTangents();
     }
 
-    public void GeneratePopulationTexture(List<Segment> segments)
+    public void GeneratePopulationTextureJob(List<Segment> segments)
     {
         int resolution = population_texture_resolution;
+        population_distances = new NativeArray<float>(resolution * resolution, Allocator.TempJob);
+        PopulationTextureJobSegment[] wrapped_segments = new PopulationTextureJobSegment[segments.Count];
+        for(int i=0; i<segments.Count; ++i) { 
+            var s = segments[i];
+            wrapped_segments[i] = new PopulationTextureJobSegment{midpoint = s.start + 0.5f*(s.end - s.start)}; 
+        }
+        population_segments = new NativeArray<PopulationTextureJobSegment>(wrapped_segments, Allocator.TempJob);
         var min = GetMinCorner();
         var max = GetMaxCorner();
         var step = (max - min) / (float)resolution;
-        float[] samples = new float[resolution * resolution];
-        uint idx = 0;
-        float max_dist = 0.0f;
-        for (float j = min.x; j < max.x; j += step.x)
+
+
+        PopulationTextureJob job = new PopulationTextureJob
         {
-            for (float i = min.y; i < max.y; i += step.y)
-            {
-                float min_dist = float.MaxValue; 
-                foreach(var s in segments) {
-                    var mid = s.start + 0.5f*(s.end - s.start);
-                    float2 pos = new float2(i, j);
-                    min_dist = Math.Min(min_dist, Mathf.Pow(pos.x - mid.x, 2.0f) + Mathf.Pow(pos.y - mid.y, 2.0f));
-                }
-                max_dist = Math.Max(min_dist, max_dist);
-                samples[idx] = min_dist;
-                ++idx;
-            }
-        }
-        population_texture.SetPixelData<float>(samples, 0);
+            distances = population_distances,
+            segments = population_segments,
+            min_corner = min,
+            step = step,
+            resolution = resolution,
+        };
+
+        population_job_handle = job.Schedule(resolution * resolution, batch_size);
+    }
+
+    public void WaitOnPopulationTextureJob()
+    {
+        population_job_handle.Complete();
+
+        population_texture.SetPixelData<float>(population_distances, 0);
+        float max_dist = 0.0f;
+        foreach (var d in population_distances) { max_dist = Mathf.Max(max_dist, d); }
         gameObject.GetComponent<MeshRenderer>().material.SetFloat("_max_region_value", max_dist);
         population_texture.Apply();
+
+        population_segments.Dispose();
+        population_distances.Dispose();
     }
 
     public float getHeight(float x, float y)

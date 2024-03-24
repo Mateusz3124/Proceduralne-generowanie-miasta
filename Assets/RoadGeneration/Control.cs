@@ -38,8 +38,7 @@ public class Control : MonoBehaviour
         RoadGen.maxCorner = proceduralTerrain.GetMaxCorner();
         roadGen.river = river;
         List<Segment> segmentList = roadGen.GenerateSegments(Vector2.zero);
-
-        proceduralTerrain.GeneratePopulationTexture(segmentList);
+        proceduralTerrain.GeneratePopulationTextureJob(segmentList);
 
         CreateRegion regions = new CreateRegion();
         regions.createRegions(proceduralTerrain, segmentList);
@@ -48,11 +47,13 @@ public class Control : MonoBehaviour
         splines.createSplines(proceduralTerrain, segmentList);
         sm.CreateMesh(GetComponent<SplineContainer>(), global_transform);
 
-        // BuildingGen buildingGen = new BuildingGen();
-        // BuildingGen.minCorner = proceduralTerrain.GetMinCorner();
-        // BuildingGen.maxCorner = proceduralTerrain.GetMaxCorner();
-        // buildingGen.river = river;
-        // buildingGen.makeBuildingsOnScene();
+        BuildingGen buildingGen = new BuildingGen();
+        BuildingGen.minCorner = proceduralTerrain.GetMinCorner();
+        BuildingGen.maxCorner = proceduralTerrain.GetMaxCorner();
+        buildingGen.river = river;
+        buildingGen.makeBuildingsOnScene();
+
+        proceduralTerrain.WaitOnPopulationTextureJob();
     }
     
 }
