@@ -65,7 +65,7 @@ public class ProceduralTerrain : MonoBehaviour
     public int height = 5;
     public int resolution = 128;
     public float noise_scale = 1.0f;
-    public int population_texture_resolution = 256;
+    public int population_texture_resolution = 128;
     [HideInInspector] public float noise_offset = 0.0f;
     public Material terrain_material;
     public Texture2D population_texture;
