@@ -53,16 +53,7 @@ public class Control : MonoBehaviour
         buildingGen.river = river;
         buildingGen.makeBuildingsOnScene();
 
-<<<<<<< HEAD
         proceduralTerrain.WaitOnPopulationTextureJob();
-=======
-        // TestPopulation.end = RoadGen.maxCorner;
-        // TestPopulation.makePopulationGrid(roadGen);
-    }
-    
-    void Update() {
-        
->>>>>>> main
     }
     
 }
