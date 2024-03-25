@@ -1,14 +1,7 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using Unity.Collections;
-using Unity.Jobs;
-using Unity.Mathematics;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Splines;
-using UnityEngine.UIElements;
-using static UnityEngine.Rendering.DebugUI;
 
 public class Control : MonoBehaviour
 {
@@ -22,6 +15,8 @@ public class Control : MonoBehaviour
 
     void Start()
     {
+        UnityEngine.Random.InitState(500);
+
         global_transform = transform_object.transform;
         global_transform.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
         transform.parent = global_transform;

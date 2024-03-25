@@ -1,16 +1,23 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Mathematics;
 using Unity.VisualScripting;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Splines;
 
 public class SplineMesh : MonoBehaviour
 {
-    private GameObject AddGameObject() {
+	static List<GameObject> meshes = new List<GameObject>();
+
+	[SerializeField] float road_width = 0.5f;
+	[SerializeField] float road_height = 0.5f;
+    [Tooltip("Multiples resolution based on road knot number (if road_segments_multipler = 2, and knot length = 5 -> road resolution = 10 :)")]
+	[SerializeField] uint road_segments_multiplier = 1;
+	[SerializeField] Material material;
+	[SerializeField] ProceduralTerrain terrain;
+
+	public GameObject AddGameObject() {
         meshes.Add(new GameObject());
         var go = meshes[meshes.Count() - 1];
         go.transform.SetParent(Control.global_transform);
@@ -19,20 +26,54 @@ public class SplineMesh : MonoBehaviour
         meshRenderer.material = material;
         return go;
     }
+
+    public void findIntersections(List<Segment> segmentList)
+    {
+        foreach (Segment s in segmentList)
+        {
+            Vector3 startPos = new Vector3(s.start.x, 0, s.start.y);
+            Vector3 endPos = new Vector3(s.end.x, 0, s.end.y);
+            if(s.linksB.Count == 1) //laczy sie po prostu z droga
+            {
+				GameObject go = AddGameObject();
+                go.name = "Zakret";
+                go.transform.position = startPos;
+			}
+            if(s.linksF.Count == 1) //bedzie podwojnie wiec trzeba wykrywac ktore sa juz zrobione
+            {
+				GameObject go = AddGameObject();
+                go.name = "Zakret";
+                go.transform.position = endPos;
+			}
+            if(s.linksB.Count > 1) //bedzie podwojnie wiec trzeba wykrywac ktore sa juz zrobione
+            {
+				GameObject go = AddGameObject();
+                go.name = "Skrzyzowanie forw z " + s.linksB.Count.ToString();
+                go.transform.position = startPos;
+			}
+            if(s.linksF.Count > 1) //bedzie podwojnie wiec trzeba wykrywac ktore sa juz zrobione
+            {
+				GameObject go = AddGameObject();
+                go.name = "Skrzyzowanie back z " + s.linksB.Count.ToString();
+                go.transform.position = endPos;
+			}
+
+        }
+	}
+
     public void CreateMesh(SplineContainer s, Transform parent)
     {
         List<Vector3> vertices = new List<Vector3>();
         List<int> indices = new List<int>();
+		List<Vector2> uvs = new List<Vector2>();
 
-        foreach (var sp in s.Splines)
+		foreach (var sp in s.Splines)
         {
-            GameObject go = AddGameObject();
-            go.transform.position = parent.position;
-            Mesh mesh = go.GetComponent<MeshFilter>().mesh;
-            int index_offset = vertices.ToArray().Length;
+			int index_offset = vertices.Count;
+            uint road_segments = (uint)sp.Knots.Count() * road_segments_multiplier;
 
-            //top verticies
-            for (uint i = 0; i <= road_segments; ++i)
+			//top verticies
+			for (uint i = 0; i <= road_segments; ++i)
             {
                 float t = (float)i / (float)road_segments;
                 var pos = sp.EvaluatePosition(t);
@@ -56,8 +97,13 @@ public class SplineMesh : MonoBehaviour
                 var pos = sp.EvaluatePosition(t);
                 var tan = sp.EvaluateTangent(t);
                 var bitan = Vector3.Normalize(Vector3.Cross(Vector3.up, tan)) * road_width * 0.5f;
-                var p1 = pos - new float3(bitan) - new float3(0, road_height, 0);
-                var p2 = pos + new float3(bitan) - new float3(0, road_height, 0);
+                var p1 = pos - new float3(bitan);
+                float p1TerrainPos = terrain.getHeight(p1.x, p1.z) - road_height;
+                var p2 = pos + new float3(bitan);
+                float p2TerrainPos = terrain.getHeight(p2.x, p2.z) - road_height;
+                p1.y = p1TerrainPos;
+                p2.y = p2TerrainPos;
+                
                 vertices.Add(p1);
                 vertices.Add(p2);
             }
@@ -116,17 +162,28 @@ public class SplineMesh : MonoBehaviour
             indices.Add(index_offset + (4 * (int)road_segments) + 2);
             indices.Add(index_offset + (4 * (int)road_segments) + 3);
 
-            mesh.Clear();
-            mesh.vertices = vertices.ToArray();
-            mesh.triangles = indices.ToArray();
-        }
-    }
+			float uvOffset = 0;
+            Debug.Log("OFF: " + index_offset);
+            for (int i = 0; i <= road_segments * 4; i += 4)
+			{
+				float distance = Vector3.Distance(vertices[index_offset + i], vertices[index_offset + i + 3]) / 4.0f;
+				float uvDistance = uvOffset + distance;
 
-    [SerializeField] float road_width = 0.5f;
-    [SerializeField] float road_height = 0.5f;
-    [SerializeField] uint road_segments = 10;
-    [SerializeField] Material material;
-    [SerializeField] ProceduralTerrain terrain;
+                uvs.AddRange(new List<Vector2> { new Vector2(uvOffset, 0), new Vector2(uvOffset, 1)
+                    ,new Vector2(uvDistance, 0),new Vector2(uvDistance, 1)});
 
-    static List<GameObject> meshes = new List<GameObject>();
+                uvOffset += uvDistance;
+			}
+		}
+
+        Debug.Log(vertices.Count + " } " + uvs.Count);
+
+		GameObject go = AddGameObject();
+		go.transform.position = parent.position;
+		Mesh mesh = go.GetComponent<MeshFilter>().mesh;
+
+		mesh.vertices = vertices.ToArray();
+		mesh.triangles = indices.ToArray();
+        mesh.uv = uvs.ToArray();
+	}
 }
