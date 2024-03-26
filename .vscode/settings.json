@@ -56,6 +56,6 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "proceduralne-generowanie-miasta.sln",
+    "dotnet.defaultSolution": "Proceduralne-generowanie-miasta.sln",
     "cmake.sourceDirectory": "C:/Users/k/Desktop/Proceduralne-generowanie-miasta/Library/PackageCache/com.unity.ide.visualstudio@2.0.21/Editor/COMIntegration/COMIntegration~"
 }

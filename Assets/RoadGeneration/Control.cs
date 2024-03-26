@@ -38,6 +38,7 @@ public class Control : MonoBehaviour
         RoadGen.maxCorner = proceduralTerrain.GetMaxCorner();
         roadGen.river = river;
         List<Segment> segmentList = roadGen.GenerateSegments(Vector2.zero);
+        proceduralTerrain.GeneratePopulationTextureJob(segmentList);
 
         CreateRegion regions = new CreateRegion();
         regions.createRegions(proceduralTerrain, segmentList);
@@ -52,10 +53,7 @@ public class Control : MonoBehaviour
         buildingGen.river = river;
         buildingGen.makeBuildingsOnScene(regions);
 
+        proceduralTerrain.WaitOnPopulationTextureJob();
     }
-    
-    void Update() {
-        
-    }
-    
+
 }

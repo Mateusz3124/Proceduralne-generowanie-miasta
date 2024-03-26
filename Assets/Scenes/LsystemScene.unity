@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
+  m_IndirectSpecularColor: {r: 0.4366756, g: 0.48427194, b: 0.5645252, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -244,13 +244,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1226911501}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.40821788, y: -0.23456968, z: 0.10938163, w: 0.8754261}
+  m_LocalRotation: {x: 0.6830127, y: -0.18301266, z: 0.18301266, w: 0.6830127}
   m_LocalPosition: {x: 0, y: 3, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+  m_LocalEulerAnglesHint: {x: 90, y: -30, z: 0}
 --- !u!114 &1226911504
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -459,6 +459,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   segment_count_limit: 800
+  scale: 2.7
   river: {fileID: 0}
 --- !u!4 &1789418046
 Transform:
@@ -489,11 +490,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   batch_size: 16
   size: 10260
-  height: 100
-  resolution: 512
+  height: 300
+  resolution: 2048
   noise_scale: 0.05
+  population_texture_resolution: 512
   noise_offset: 0
-  terrain_material: {fileID: 2100000, guid: 302ecb83b4f464dfba8418de7af4c128, type: 2}
+  terrain_material: {fileID: 2100000, guid: 9a5189412171b4e46bc6e961a9691221, type: 2}
+  population_texture: {fileID: 0}
 --- !u!114 &1789418048
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -508,7 +511,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   transform_object: {fileID: 679214260}
   sm: {fileID: 1789418053}
-  riverWidth: 50
+  riverWidth: 0
 --- !u!114 &1789418052
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -549,10 +552,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 391952fc12bd9864f8a06fb354de9f92, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  road_width: 5
+  road_width: 50
   road_height: 1
   road_segments: 10
   material: {fileID: 2100000, guid: dcd18e700ded0614583af7b14f395377, type: 2}
+  terrain: {fileID: 1789418047}
 --- !u!114 &1789418054
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -652,7 +656,7 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.3
-  far clip plane: 5000
+  far clip plane: 200000
   field of view: 60
   orthographic: 0
   orthographic size: 5
@@ -679,13 +683,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1902108075}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.4177924, y: -0.4875682, z: 0.28432027, w: -0.7119612}
-  m_LocalPosition: {x: 3803.1433, y: 4460.752, z: 3931.3042}
+  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: 9800, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 13.3, y: 25.7, z: 0}
+  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
 --- !u!114 &1902108079
 MonoBehaviour:
   m_ObjectHideFlags: 0
