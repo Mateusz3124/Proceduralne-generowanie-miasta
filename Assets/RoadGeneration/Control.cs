@@ -51,7 +51,7 @@ public class Control : MonoBehaviour
         BuildingGen.minCorner = proceduralTerrain.GetMinCorner();
         BuildingGen.maxCorner = proceduralTerrain.GetMaxCorner();
         buildingGen.river = river;
-        buildingGen.makeBuildingsOnScene(regions);
+        buildingGen.makeBuildingsOnScene();
 
         proceduralTerrain.WaitOnPopulationTextureJob();
     }

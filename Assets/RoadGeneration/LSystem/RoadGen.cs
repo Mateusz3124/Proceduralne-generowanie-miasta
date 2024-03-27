@@ -13,7 +13,7 @@ using static UnityEngine.Rendering.HableCurve;
 public class RoadGen : MonoBehaviour
 {
     public int segment_count_limit = 2000;
-    public float scale = 2.7f;
+    public float populationScale = 2.7f;
 
     const float BRANCH_ANGLE_DEVIATION = 3.0f; // degrees
     const float STRAIGHT_ANGLE_DEVIATION = 15.0f; // degrees
@@ -401,12 +401,12 @@ public class RoadGen : MonoBehaviour
 
     public float SamplePopulation(Vector2 start, Vector2 end)
     {
-        float s_start = Mathf.PerlinNoise(start.x / maxCorner.x * scale + randomPopOffsetX, start.y / maxCorner.y * scale + randomPopOffsetY);
-        float s_end = Mathf.PerlinNoise(end.x / maxCorner.x * scale + randomPopOffsetX, end.y / maxCorner.y * scale + randomPopOffsetY);
+        float s_start = Mathf.PerlinNoise(start.x / maxCorner.x * populationScale + randomPopOffsetX, start.y / maxCorner.y * populationScale + randomPopOffsetY);
+        float s_end = Mathf.PerlinNoise(end.x / maxCorner.x * populationScale + randomPopOffsetX, end.y / maxCorner.y * populationScale + randomPopOffsetY);
         return (s_start + s_end) / 2f;
     }
 
     public float SampleNoise(Vector2 point) {
-        return Mathf.PerlinNoise(point.x / maxCorner.x * scale + randomPopOffsetX, point.y / maxCorner.y * scale + randomPopOffsetY);
+        return Mathf.PerlinNoise(point.x / maxCorner.x * populationScale + randomPopOffsetX, point.y / maxCorner.y * populationScale + randomPopOffsetY);
     }
 }

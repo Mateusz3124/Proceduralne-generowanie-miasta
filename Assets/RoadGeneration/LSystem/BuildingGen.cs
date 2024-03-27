@@ -28,7 +28,7 @@ public class BuildingGen
 
     // only for visualisation and testing
     // else dont use
-    public void makeBuildingsOnScene(CreateRegion regions) { 
+    public void makeBuildingsOnScene() { 
         List<Building> buildings = GenerateBuildings();
         foreach(var b in buildings) {
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
